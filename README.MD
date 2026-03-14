@@ -1,205 +1,355 @@
-# JooCLI — Smart Terminal Assistant
+<div align="center">
 
-An interactive terminal shell with **tab autocomplete**, **AI-powered troubleshooting**, **Docker inspector**, **network tools**, and **built-in command docs** — using only Python stdlib. No pip installs needed.
+```
+     ██╗ ██████╗  ██████╗      ██████╗██╗     ██╗
+     ██║██╔═══██╗██╔═══██╗    ██╔════╝██║     ██║
+     ██║██║   ██║██║   ██║    ██║     ██║     ██║
+██   ██║██║   ██║██║   ██║    ██║     ██║     ██║
+╚█████╔╝╚██████╔╝╚██████╔╝    ╚██████╗███████╗██║
+ ╚════╝  ╚═════╝  ╚═════╝      ╚═════╝╚══════╝╚═╝
+```
+
+**Smart Terminal Assistant — v4.0**
+
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://python.org)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen)](https://github.com)
+[![AI Streaming](https://img.shields.io/badge/AI-Streaming-purple?logo=anthropic)](https://anthropic.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20WSL-lightgrey)](https://github.com)
+
+AI-powered shell with tab autocomplete · streaming responses · Docker inspector · full network toolkit
+
+[Install](#-install) · [AI Setup](#-ai-setup) · [Commands](#-commands) · [Network Tools](#-network-tools) · [Docker](#-docker-inspector) · [FAQ](#-faq)
+
+</div>
 
 ---
 
-## Quick Start
+## What is JooCLI?
 
+JooCLI is a smart terminal shell that wraps your everyday commands with:
+
+- **Streaming AI** — ask Claude, ChatGPT, Groq, or Gemini and watch the answer appear word by word
+- **Auto error capture** — every failed command logs its error and shows an instant fix
+- **50+ built-in command docs** — `:help grep` shows all flags with a real example
+- **Full network toolkit** — ping, traceroute, DNS, WHOIS, ARP, port scanning, TCP checks
+- **Docker inspector** — containers, images, volumes, logs, exec — all from one place
+- **Pure Python stdlib** — no pip, no virtualenv, no dependencies
+
+---
+
+## 📦 Install
+
+**Option 1 — Run directly**
 ```bash
-# Fix Windows CRLF if needed (WSL users)
+# Fix Windows CRLF first if on WSL
 sed -i 's/\r//' joo_cli.py
 
-# Run directly
 python3 joo_cli.py
 ```
 
-Or install as a global `joo` command:
-
+**Option 2 — Install as global `joo` command** *(recommended)*
 ```bash
 chmod +x joo_cli.py
 sudo cp joo_cli.py /usr/local/bin/joo
 joo
 ```
 
----
+**Option 3 — One-liner install**
+```bash
+sudo curl -fsSL https://raw.githubusercontent.com/youruser/joocli/main/joo_cli.py \
+  -o /usr/local/bin/joo && sudo chmod +x /usr/local/bin/joo && joo
+```
 
-## All Commands
-
-| Command | What it does |
-|---|---|
-| `Tab` | Autocomplete: command names, flags, file paths |
-| `:help CMD` | Show description, all flags, and a real example |
-| `:fix [ERROR]` | Match error text to known patterns and suggest a fix |
-| `:ai QUESTION` | Ask Claude anything — last error included as context |
-| `:docker` | Full Docker report: containers, images, networks, volumes |
-| `:docker logs <n> [lines]` | Tail container logs (default 50 lines) |
-| `:docker inspect <n>` | Show container IP, ports, env vars, mounts |
-| `:docker exec <n> [sh]` | Open interactive shell inside a container |
-| `:docker stop\|start\|rm <n>` | Manage container lifecycle |
-| `:net` | Show network interfaces, IPs, routing, DNS servers |
-| `:ports` | List all listening TCP/UDP ports with process names |
-| `:history [N] [term]` | Search last N entries from bash/zsh history |
-| `:last` | Show last captured error or full error log |
-| `:clear` | Clear screen |
-| `exit` / `quit` | Leave JooCLI |
-| _anything else_ | Runs as a shell command with auto error capture |
+> **Requirements:** Python 3.8+ · Linux, macOS, or WSL2 · No pip packages needed
 
 ---
 
-## AI Features
+## 🤖 AI Setup
 
-Set your Anthropic API key to unlock Claude-powered answers:
+JooCLI supports four AI providers. Pick any one — you only need a single key.
+
+| Provider | Speed | Best for | Get key |
+|---|---|---|---|
+| **Groq / LLaMA** | ⚡ Fastest | Quick answers, free tier | [console.groq.com](https://console.groq.com) |
+| **Claude** | 🧠 Smartest | Complex debugging | [console.anthropic.com](https://console.anthropic.com) |
+| **ChatGPT** | 🔧 Reliable | General use | [platform.openai.com](https://platform.openai.com) |
+| **Gemini** | 🆓 Free | Budget option | [aistudio.google.com](https://aistudio.google.com) |
+
+**Set a key — three ways:**
 
 ```bash
-# Add to ~/.bashrc or ~/.zshrc
-export ANTHROPIC_API_KEY="sk-ant-..."
-source ~/.bashrc
+# 1. Inside JooCLI (saved to ~/.joocli_config.json)
+:ai key groq gsk_xxxxxxxxxxxx
+:ai key claude sk-ant-xxxxxxxxxxxx
+
+# 2. Environment variable (add to ~/.bashrc or ~/.zshrc)
+export GROQ_API_KEY="gsk_xxxxxxxxxxxx"
+export ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxx"
+
+# 3. Switch active provider anytime
+:ai set groq
+:ai set claude
 ```
 
-Then ask anything from inside JooCLI:
-
-```
-joo ❯ :ai why does my container keep exiting with code 137?
-joo ❯ :ai what's the difference between CMD and ENTRYPOINT in Docker?
-joo ❯ :ai how do I find which process is using port 3000?
-joo ❯ :ai fix the error above
-```
-
-> The last captured error is automatically included in every `:ai` request for context.
+**All responses stream in real-time** — you see the answer as it's generated, not all at once.
 
 ---
 
-## Docker Inspector
+## 🗂 Commands
 
-Run `:docker` for a full status report:
+### AI
 
 ```
-joo ❯ :docker
+:ai why does my container keep restarting?
+:ai fix the error above
+:ai explain what SIGKILL vs SIGTERM does
+:ai how do I forward port 5432 over SSH?
+:ai status                          → show all configured providers
+:ai set groq                        → switch to Groq
+:ai key claude sk-ant-xxx           → save a Claude key
+:ai models                          → list model names per provider
+```
 
+### Help & Docs
+
+```
+:help grep          → all flags + real example
+:help dig           → DNS lookup flags
+:help docker        → container management
+:help ssh           → all SSH options
+:help               → grouped list of all 50+ documented commands
+```
+
+### Error Fix
+
+```
+:fix                → re-analyze last captured error
+:fix "permission denied"
+:fix "address already in use"
+:last               → show last error + full log
+```
+
+### Shell
+
+```
+ping google.com     → runs live, Ctrl-C works cleanly
+top                 → interactive commands pass through
+ls -lah /var/log    → any command runs normally
+:history 20 docker  → last 20 history entries matching "docker"
+:clear              → clear screen
+exit                → quit JooCLI
+```
+
+---
+
+## 🌐 Network Tools
+
+### Ping
+```bash
+:ping 8.8.8.8           # ping with 4 packets (default)
+:ping google.com 10     # ping with 10 packets
+```
+```
+▸ PING  google.com  (count=4)
+  Resolved: google.com → 142.250.185.14
+  PING 142.250.185.14 (142.250.185.14) 56(84) bytes of data.
+  4 packets transmitted, 4 received, 0% packet loss
+  rtt min/avg/max/mdev = 12.4/13.1/14.2/0.7 ms
+```
+
+### Traceroute
+```bash
+:trace 1.1.1.1          # auto-picks mtr → traceroute → tracepath
+```
+```
+▸ TRACEROUTE  1.1.1.1
+
+  1.  192.168.1.1       1.2ms
+  2.  10.0.0.1          4.8ms
+  3.  1.1.1.1           13.1ms
+```
+
+### DNS Lookup
+```bash
+:dns google.com         # A, AAAA, MX, NS, TXT records
+:dns github.com MX      # specific record type
+:dns 8.8.8.8            # reverse PTR lookup
+```
+```
+▸ DNS  google.com
+
+  A Records:
+  · 142.250.185.14
+
+  MX Records:
+  · 10 smtp.google.com.
+
+  NS Records:
+  · ns1.google.com.
+```
+
+### WHOIS
+```bash
+:whois google.com       # domain registration info
+:whois 8.8.8.8          # IP ownership / ASN
+```
+
+### ARP Table
+```bash
+:arp                    # show all neighbors (ip neigh + arp fallback)
+```
+```
+▸ ARP / NEIGHBOR TABLE
+
+  IP ADDRESS           INTERFACE  MAC ADDRESS         STATE
+  192.168.1.1          eth0       aa:bb:cc:dd:ee:ff   REACHABLE
+  192.168.1.42         eth0       11:22:33:44:55:66   STALE
+```
+
+### TCP Connectivity Check
+```bash
+:net check github.com:443       # TCP probe + HTTP status
+:net check 192.168.1.1          # checks ports 22, 80, 443
+```
+```
+▸ TCP CHECK  github.com
+
+  DNS              github.com → 140.82.121.4
+  TCP              github.com:443  OPEN  (12.3 ms)
+  HTTP             https://github.com/  200 OK
+```
+
+### Network Overview
+```bash
+:net                    # interfaces, routing, DNS, public IP
+:ports                  # all listening ports with process names
+:net scan 192.168.1.0/24  # nmap subnet scan (requires nmap)
+```
+
+---
+
+## 🐳 Docker Inspector
+
+```bash
+:docker                          # full report: containers, images, networks, volumes
+:docker logs myapp               # last 50 log lines
+:docker logs myapp 200           # last 200 lines
+:docker inspect myapp            # ports, env vars, mounts, restart policy
+:docker exec myapp bash          # open shell inside container
+:docker stop myapp               # stop container
+:docker start myapp              # start container
+:docker restart myapp            # restart container
+:docker rm myapp                 # remove container
+```
+
+**Sample output:**
+```
   Docker Engine  v26.1.3
-  ──────────────────────────────────────────────────
+  ──────────────────────────────────────────────────────────────
   CONTAINERS
-  NAME          STATUS          IMAGE          PORTS
-  myapp         Up 2 hours      nginx:latest   0.0.0.0:8080->80/tcp
-  postgres-db   Up 3 days       postgres:15    0.0.0.0:5432->5432/tcp
-  old-worker    Exited (1)      python:3.11    —
+  NAME         STATUS           IMAGE              PORTS
+  api          Up 3 hours       node:20-alpine     0.0.0.0:3000->3000/tcp
+  postgres     Up 2 days        postgres:16        0.0.0.0:5432->5432/tcp
+  redis        Up 2 days        redis:7            0.0.0.0:6379->6379/tcp
+  old-worker   Exited (1) 1d    python:3.11        —
 
   IMAGES
-  nginx:latest          45MB    2 weeks ago
-  postgres:15           412MB   1 month ago
-
-  DOCKER NETWORKS
-  bridge      driver=bridge  scope=local
-  app-net     driver=bridge  scope=local
-
-  VOLUMES
-  pgdata      driver=local
-```
-
-Subcommands:
-
-```bash
-:docker logs myapp 100      # last 100 lines of logs
-:docker inspect myapp       # ports, env vars, mounts, restart policy
-:docker exec myapp bash     # open shell inside container
-:docker stop myapp          # stop container
-:docker start myapp         # start container
-:docker rm myapp            # remove container
+  node:20-alpine     182MB    3 days ago
+  postgres:16        412MB    1 month ago
+  redis:7             41MB    2 months ago
 ```
 
 ---
 
-## Network Tools
+## 📖 Built-in Command Docs (50+)
 
-```
-joo ❯ :net
+Run `:help <command>` for any of these:
 
-  NETWORK INTERFACES
-  eth0
-    IPv4    192.168.1.42/24
-    MAC     00:1a:2b:3c:4d:5e
-  docker0
-    IPv4    172.17.0.1/16
-
-  DNS SERVERS
-  nameserver   8.8.8.8
-  nameserver   1.1.1.1
-
-joo ❯ :ports
-
-  LISTENING PORTS
-  tcp   0.0.0.0:8080   nginx
-  tcp   0.0.0.0:5432   postgres
-  tcp   0.0.0.0:6379   redis
-  tcp   0.0.0.0:22     sshd
-```
-
----
-
-## Supported Commands (with built-in docs)
-
-`ls`, `cd`, `grep`, `find`, `curl`, `ps`, `kill`, `tar`, `chmod`, `ssh`,
-`git`, `docker`, `awk`, `sed`, `df`, `du`, `netstat`, `lsof`, `top`,
-`cat`, `head`, `tail`, `wc`, `sort`, `uniq`, `xargs`, `rsync`, `cron`,
-`env`, `export`, `ping`, `nmap`, `systemctl`, `journalctl`
-
-Plus every executable in your `$PATH` is available for Tab autocomplete.
-
----
-
-## Auto-detected Error Patterns
-
-JooCLI recognizes 15+ common errors and shows an instant fix — automatically triggered after any failed command:
-
-| Pattern | Fix hint |
+| Category | Commands |
 |---|---|
-| `command not found` | Check spelling, install package, or add to $PATH |
-| `permission denied` | Use `sudo`, check `ls -la`, fix with `chmod` |
-| `no such file or directory` | Check path with `ls`, use Tab completion |
-| `address already in use` | `lsof -i :<PORT>` then `kill -9 <PID>` |
-| `connection refused` | Check service is running with `systemctl status` |
-| `no space left on device` | `df -h` then `du -sh * \| sort -hr` |
-| `too many open files` | `ulimit -n 65536` |
-| `segmentation fault` | Run under `gdb`, check for null pointers |
-| `out of memory` | `free -h`, kill hogs with `top` |
-| `read-only file system` | `mount -o remount,rw /` |
-| `ssl certificate` errors | Check system clock, update `ca-certificates` |
-| `network is unreachable` | `ip addr`, `ip route`, check DNS |
-| `python3\r` / CRLF errors | `sed -i 's/\r//' yourfile.py` |
-| …and more | Run `:ai fix the error above` for anything else |
+| **Files** | `ls` `cd` `pwd` `mkdir` `rm` `cp` `mv` `ln` `touch` `find` `locate` `stat` `file` |
+| **View/Edit** | `cat` `less` `head` `tail` `grep` `awk` `sed` `sort` `uniq` `wc` `cut` `tr` `tee` |
+| **Disk** | `df` `du` `lsblk` `mount` `umount` `chmod` `chown` |
+| **Processes** | `ps` `top` `htop` `kill` `pkill` `killall` `nice` `nohup` `jobs` `bg` `fg` |
+| **Network** | `ping` `traceroute` `mtr` `dig` `nslookup` `host` `whois` `curl` `wget` `ss` `netstat` `lsof` `nmap` `ip` `arp` `iptables` `ufw` `tcpdump` |
+| **SSH/Transfer** | `ssh` `scp` `rsync` `tar` |
+| **System** | `git` `docker` `systemctl` `journalctl` `cron` `env` `which` `uname` `free` `dmesg` `openssl` `strace` |
 
 ---
 
-## Files
+## ⚡ Error Auto-Detection
+
+Every failed command is automatically analyzed. JooCLI recognizes 24+ patterns:
+
+| Error message | Instant fix shown |
+|---|---|
+| `command not found` | Check spelling, install package, fix `$PATH` |
+| `permission denied` | Use `sudo`, check `ls -la`, fix with `chmod` |
+| `address already in use` | `lsof -i :<PORT>` → `kill -9 <PID>` |
+| `connection refused` | `systemctl status <svc>` · `ss -tlnp` |
+| `no space left on device` | `df -h` → `du -sh * \| sort -hr` |
+| `name or service not known` | DNS failure → check `/etc/resolv.conf` |
+| `SSL certificate` | Check system clock · `update-ca-certificates` |
+| `authentication failed` | Check SSH key perms `chmod 600 ~/.ssh/*` |
+| `host unreachable` | `ping` · `traceroute` · check firewall |
+| `out of memory` | `free -h` · kill hogs · add swap |
+| `python3\r` / CRLF | `sed -i 's/\r//' yourfile.py` |
+| _anything else_ | `:ai fix the error above` |
+
+---
+
+## 🗃 Files
 
 | File | Purpose |
 |---|---|
-| `joo_cli.py` | Main script — the only file you need |
-| `~/.joocli_history` | JooCLI session command history |
-| `~/.joocli_errors.log` | Log of all captured errors with timestamps |
+| `joo_cli.py` | The only file you need |
+| `~/.joocli_config.json` | Saved API keys + active provider |
+| `~/.joocli_history` | JooCLI command history |
+| `~/.joocli_errors.log` | All captured errors with timestamps |
 
 ---
 
-## Requirements
+## ❓ FAQ
 
-| Requirement | Notes |
-|---|---|
-| Python 3.8+ | Pre-installed on most Linux/macOS systems |
-| No pip packages | Uses only `readline`, `subprocess`, `urllib`, `json` |
-| Docker (optional) | For `:docker` inspector features |
-| Anthropic API key (optional) | For `:ai` Claude-powered answers — get one at [console.anthropic.com](https://console.anthropic.com) |
+**Q: Ctrl-C crashes the whole shell**
+> Fixed in v4.0. JooCLI now uses `Popen` with signal handling so Ctrl-C only interrupts the running command — it never crashes the shell.
+
+**Q: `python3\r: No such file or directory`**
+> Windows CRLF line endings in the script. Fix: `sed -i 's/\r//' joo_cli.py`
+
+**Q: AI says "no provider configured"**
+> Set a key with `:ai key groq YOUR_KEY` or `export GROQ_API_KEY=...` — Groq has a free tier.
+
+**Q: `:trace` says tool not found**
+> Install traceroute: `sudo apt install traceroute` or `sudo apt install mtr`
+
+**Q: `:net scan` hangs or is slow**
+> nmap scans take time on large subnets. For a quick check use `:net check HOST:PORT` instead.
+
+**Q: Does this work on macOS?**
+> Yes. `ping` syntax differs slightly (macOS uses `-c` the same way). `traceroute` and `mtr` need `brew install mtr`.
+
+**Q: Can I use multiple AI keys?**
+> Yes — save all of them with `:ai key <provider> <key>` and switch between them with `:ai set <provider>`.
 
 ---
 
-## WSL / Windows Notes
+## 🔑 API Key Prefixes
 
-If you see `python3\r: No such file or directory`, your file has Windows CRLF line endings. Fix:
+| Provider | Key prefix | Example |
+|---|---|---|
+| Claude (Anthropic) | `sk-ant-` | `sk-ant-api03-...` |
+| ChatGPT (OpenAI) | `sk-` | `sk-proj-...` |
+| Groq | `gsk_` | `gsk_Ks3x...` |
+| Gemini | `AIza` | `AIzaSy...` |
 
-```bash
-sed -i 's/\r//' joo_cli.py
-# or
-dos2unix joo_cli.py
-```
+JooCLI warns you if you paste the wrong key into the wrong provider slot.
 
-JooCLI works best on Linux and macOS. On native Windows, Tab completion has limited readline support — use WSL2 for the full experience.
+---
+
+<div align="center">
+
+Made with ☕ · Pure Python stdlib · No pip needed
+
+</div>
