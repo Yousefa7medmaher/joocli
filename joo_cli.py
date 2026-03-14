@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-JooCLI — Smart Terminal Assistant  v4.0
+JooCLI — Smart Terminal Assistant  v4.1
 Autocomplete · AI Troubleshooting · Docker Inspector · Network Tools
 
 Usage:
@@ -15,13 +15,22 @@ Requires:
         GROQ_API_KEY       → Groq / LLaMA (llama-3.3-70b-versatile)
         GEMINI_API_KEY     → Google Gemini (gemini-2.0-flash)
 
-What's new in v4.0:
-    ✓ Streaming AI responses for all providers (Anthropic, OpenAI-compat, Gemini)
-    ✓ Expanded network troubleshooter: traceroute, dig, whois, arp, mtr, ss, ip, nslookup
-    ✓ Fixed :ping command — numeric count only, no words
-    ✓ 50+ command docs (was ~30)
-    ✓ Robust provider key validation & fallback
-    ✓ :net dns, :net trace, :net scan, :net whois, :net arp, :net check
+What's new in v4.1:
+    ✓ 12-mode context-aware Tab completer
+       - :docker logs/exec/stop/start/rm → live container names
+       - :ai set/key → provider names
+       - :net scan/check/dns → sub-command list
+       - git/systemctl → sub-commands
+       - ssh/scp → ~/.ssh/config + known_hosts hosts
+       - :ping/:trace/:dns → recent hosts from history
+       - flags (-) → per-command flag list
+       - fuzzy match on typos (≥3 chars)
+       - double-Tab shows formatted menu
+    ✓ Fuzzy container name suggestions on typos
+       (':docker logs mongo-oreder' → Did you mean: mongo-order?)
+    ✓ Live Docker name cache (refreshes every 8s)
+    ✓ Ctrl-C no longer crashes the shell
+    ✓ Streaming AI for all 4 providers
 """
 
 import os
@@ -1023,8 +1032,8 @@ def render_banner():
         c("╚█████╔╝╚██████╔╝╚██████╔╝    ╚██████╗███████╗██║", "blue", "bold"),
         c(" ╚════╝  ╚═════╝  ╚═════╝      ╚═════╝╚══════╝╚═╝", "dim"),
     ]
-    tagline = c("  Smart Terminal Assistant  v4.0  ·  AI · Docker · Network", "yellow")
-    version = c("  Streaming AI  ·  50+ Commands  ·  Full Network Toolkit", "dim")
+    tagline = c("  Smart Terminal Assistant  v4.1  ·  AI · Docker · Network", "yellow")
+    version = c("  Streaming AI  ·  50+ Commands  ·  Smart Autocomplete  ·  Fuzzy Match", "dim")
 
     cmds = [
         ("Tab",                 "autocomplete commands, flags & paths"),
@@ -1574,20 +1583,49 @@ def docker_report():
     lines += ["", c("  :docker logs <name>  :docker exec <name>  :docker inspect <name>", "dim")]
     return "\n".join(lines)
 
+def _docker_fuzzy_container(name: str) -> str:
+    """If container 'name' not found, return closest match or empty string."""
+    out, _, _ = run_cmd("docker ps -a --format '{{.Names}}' 2>/dev/null", timeout=4)
+    all_names = [l.strip() for l in out.splitlines() if l.strip()]
+    if not all_names:
+        return ""
+    ranked = fuzzy_find(name, all_names, cutoff=5)
+    return ranked[0] if ranked else ""
+
 def docker_logs(name, tail=50):
     out, err, code = run_cmd(f"docker logs --tail {tail} {name} 2>&1")
     if code != 0:
-        return c(f"  Error: {err}", "red")
+        suggestion = _docker_fuzzy_container(name)
+        msg = c(f"\n  ✗  Container '{name}' not found or error.\n", "red")
+        if err:
+            msg += c(f"     {err}\n", "dim")
+        if suggestion and suggestion != name:
+            msg += c(f"\n  Did you mean: ", "yellow") + c(f":docker logs {suggestion}", "cyan") + "\n"
+        return msg
     return c(f"  ── Logs: {name} (last {tail} lines) ──\n", "yellow") + (out or c("  (no output)", "dim"))
 
 def docker_exec(name, cmd_str="sh"):
+    # Fuzzy check before exec
+    out, _, code = run_cmd(f"docker ps -a --format '{{{{.Names}}}}' 2>/dev/null", timeout=4)
+    all_names = [l.strip() for l in out.splitlines() if l.strip()]
+    if name not in all_names:
+        suggestion = _docker_fuzzy_container(name)
+        print(c(f"\n  ✗  Container '{name}' not found.", "red"))
+        if suggestion:
+            print(c(f"  Did you mean: ", "yellow") + c(f":docker exec {suggestion}", "cyan"))
+        print()
+        return
     print(c(f"\n  Entering container '{name}' (type 'exit' to leave)\n", "cyan"))
     os.system(f"docker exec -it {name} {cmd_str}")
 
 def docker_inspect(name):
     out, err, code = run_cmd(f"docker inspect {name}")
     if code != 0:
-        return c(f"  Error: {err}", "red")
+        suggestion = _docker_fuzzy_container(name)
+        msg = c(f"\n  ✗  Container or image '{name}' not found.\n", "red")
+        if suggestion and suggestion != name:
+            msg += c(f"  Did you mean: ", "yellow") + c(f":docker inspect {suggestion}", "cyan") + "\n"
+        return msg
     try:
         data = json.loads(out)
         if not data:
@@ -1623,65 +1661,331 @@ def docker_inspect(name):
         return c(f"  Parse error: {e}", "red")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Tab completer
+# Fuzzy / nearest-match helper
+# ─────────────────────────────────────────────────────────────────────────────
+def _fuzzy_score(a: str, b: str) -> int:
+    """Simple edit-distance-like score: lower = closer match."""
+    a, b = a.lower(), b.lower()
+    if a == b:
+        return 0
+    if b.startswith(a):
+        return 1
+    # count matching chars in order
+    matches = 0
+    bi = 0
+    for ch in a:
+        for i in range(bi, len(b)):
+            if b[i] == ch:
+                matches += 1
+                bi = i + 1
+                break
+    score = len(a) - matches + abs(len(a) - len(b))
+    return score
+
+def fuzzy_find(query: str, candidates: list, cutoff: int = 4) -> list:
+    """Return candidates sorted by similarity, filtered to score <= cutoff."""
+    if not query:
+        return candidates[:10]
+    scored = [(c_, _fuzzy_score(query, c_)) for c_ in candidates]
+    scored.sort(key=lambda x: x[1])
+    return [c_ for c_, s in scored if s <= cutoff]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Live Docker container/image name cache
+# ─────────────────────────────────────────────────────────────────────────────
+class _DockerCache:
+    """Lazily caches container and image names for tab completion."""
+    _containers: list = []
+    _images:     list = []
+    _last_refresh: float = 0
+    _TTL: float = 8.0   # seconds between refreshes
+
+    @classmethod
+    def _refresh(cls):
+        now = time.monotonic()
+        if now - cls._last_refresh < cls._TTL:
+            return
+        cls._last_refresh = now
+        try:
+            out, _, code = run_cmd(
+                "docker ps -a --format '{{.Names}}' 2>/dev/null", timeout=3
+            )
+            cls._containers = [l.strip() for l in out.splitlines() if l.strip()] if code == 0 else []
+        except Exception:
+            cls._containers = []
+        try:
+            out, _, code = run_cmd(
+                "docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null", timeout=3
+            )
+            cls._images = [l.strip() for l in out.splitlines() if l.strip()] if code == 0 else []
+        except Exception:
+            cls._images = []
+
+    @classmethod
+    def containers(cls) -> list:
+        cls._refresh()
+        return cls._containers
+
+    @classmethod
+    def images(cls) -> list:
+        cls._refresh()
+        return cls._images
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tab completer  — context-aware, 12 completion modes
 # ─────────────────────────────────────────────────────────────────────────────
 class JooCompleter:
-    JOO_CMDS = [
-        ":help", ":fix", ":ai", ":ai set", ":ai key", ":ai status", ":ai models",
-        ":ping", ":trace", ":dns", ":whois", ":arp",
-        ":net", ":net scan", ":net check",
-        ":ports",
-        ":docker", ":docker logs", ":docker exec", ":docker inspect",
-        ":docker stop", ":docker start", ":docker restart", ":docker rm",
-        ":history", ":last", ":clear", "exit", "quit",
+
+    # All top-level joo commands
+    JOO_TOP = [
+        ":help", ":fix",
+        ":ai", ":ping", ":trace", ":dns", ":whois", ":arp",
+        ":net", ":ports", ":docker",
+        ":history", ":last", ":clear",
+        "exit", "quit",
     ]
-    AI_PROVIDERS_LIST = list(AI_PROVIDERS.keys())
+
+    # Sub-commands for each namespace
+    _AI_SUBS     = ["set", "key", "status", "models"]
+    _NET_SUBS    = ["scan", "check", "dns", "trace", "whois", "arp"]
+    _DOCKER_SUBS = ["logs", "exec", "inspect", "stop", "start", "restart", "rm", "rmi", "pull", "stats"]
+    _AI_PROVS    = list(AI_PROVIDERS.keys())
+
+    # Common flags for built-in commands (supplement COMMAND_DOCS)
+    _EXTRA_FLAGS: dict = {}
 
     def __init__(self):
-        self.commands = sorted(COMMAND_DOCS.keys())
+        # Build $PATH executable set
+        self._path_cmds: list = []
         for p in os.environ.get("PATH", "").split(":"):
             try:
                 for f in Path(p).iterdir():
                     if f.is_file() and os.access(f, os.X_OK):
-                        self.commands.append(f.name)
+                        self._path_cmds.append(f.name)
             except Exception:
                 pass
-        self.commands = sorted(set(self.commands))
+        self._path_cmds = sorted(set(self._path_cmds))
 
-    def complete(self, text, state):
+        # All known commands (docs + PATH) deduplicated
+        self._all_cmds = sorted(set(list(COMMAND_DOCS.keys()) + self._path_cmds))
+
+        # Pre-built flat list of every :joo-style completion for first-word matching
+        self._joo_flat = (
+            self.JOO_TOP
+            + [f":ai {s}"      for s in self._AI_SUBS]
+            + [f":net {s}"     for s in self._NET_SUBS]
+            + [f":docker {s}"  for s in self._DOCKER_SUBS]
+        )
+
+    # ── helpers ───────────────────────────────────────────────────────────────
+
+    def _path_completions(self, text: str) -> list:
+        """File/dir path completions, with trailing / for dirs."""
+        expanded = os.path.expanduser(text) if text else "."
+        base     = os.path.dirname(expanded) or "."
+        prefix   = os.path.basename(expanded)
         try:
-            line   = readline.get_line_buffer()
-            tokens = line.split()
+            entries = os.listdir(base)
+        except OSError:
+            return []
+        results = []
+        for e in entries:
+            if e.startswith(prefix):
+                full = os.path.join(base, e) if base not in (".", "") else e
+                results.append(full + "/" if os.path.isdir(full) else full)
+        return sorted(results)
 
-            if text.startswith(":"):
-                matches = [cmd for cmd in self.JOO_CMDS if cmd.startswith(text)]
-                return matches[state] if state < len(matches) else None
+    def _flag_completions(self, cmd: str, text: str) -> list:
+        """Return flag suggestions for a known command."""
+        flags = list(COMMAND_DOCS.get(cmd, {}).get("flags", {}).keys())
+        return [f for f in flags if f.startswith(text)]
 
-            # :ai set <provider>
-            if len(tokens) >= 2 and tokens[0] == ":ai" and tokens[1] in ("set", "key"):
-                matches = [p for p in self.AI_PROVIDERS_LIST if p.startswith(text)]
-                return matches[state] if state < len(matches) else None
+    def _container_completions(self, text: str) -> list:
+        return [n for n in _DockerCache.containers() if n.startswith(text)]
 
-            if not tokens or (len(tokens) == 1 and not line.endswith(" ")):
-                matches = [cmd for cmd in self.commands if cmd.startswith(text)]
-            elif tokens and tokens[0] in COMMAND_DOCS and text.startswith("-"):
-                flags   = list(COMMAND_DOCS[tokens[0]]["flags"].keys())
-                matches = [f for f in flags if f.startswith(text)]
-            else:
-                expanded = os.path.expanduser(text) if text else "."
-                base     = os.path.dirname(expanded) or "."
-                prefix   = os.path.basename(expanded)
-                try:
-                    entries = os.listdir(base)
-                except OSError:
-                    entries = []
-                raw     = [os.path.join(base, e) if base != "." else e
-                           for e in entries if e.startswith(prefix)]
-                matches = [r + ("/" if os.path.isdir(r) else " ") for r in raw]
+    def _image_completions(self, text: str) -> list:
+        return [i for i in _DockerCache.images() if i.startswith(text)]
 
+    # ── core complete ─────────────────────────────────────────────────────────
+
+    def complete(self, text: str, state: int):
+        try:
+            matches = self._get_matches(text)
             return matches[state] if state < len(matches) else None
         except Exception:
             return None
+
+    def _get_matches(self, text: str) -> list:
+        line   = readline.get_line_buffer()
+        tokens = line.split()
+        # token before cursor (the word being completed)
+        cursor_at_space = line.endswith(" ")
+        n_tokens = len(tokens)
+
+        # ── MODE 1: first word, starts with ':' ─────────────────────────────
+        if not cursor_at_space and n_tokens <= 1 and text.startswith(":"):
+            return [x + " " if not x.endswith(" ") else x
+                    for x in self._joo_flat if x.startswith(text)]
+
+        # ── MODE 2: ':ai' sub-commands ───────────────────────────────────────
+        if n_tokens >= 1 and tokens[0] == ":ai":
+            if n_tokens == 1 and cursor_at_space:
+                return [s + " " for s in self._AI_SUBS]
+            if n_tokens == 2 and not cursor_at_space:
+                return [s + " " for s in self._AI_SUBS if s.startswith(text)]
+            # ':ai set <provider>' or ':ai key <provider>'
+            if n_tokens >= 2 and tokens[1] in ("set", "key"):
+                if n_tokens == 2 and cursor_at_space:
+                    return [p + " " for p in self._AI_PROVS]
+                if n_tokens == 3 and not cursor_at_space:
+                    return [p + " " for p in self._AI_PROVS if p.startswith(text)]
+
+        # ── MODE 3: ':net' sub-commands ──────────────────────────────────────
+        if n_tokens >= 1 and tokens[0] == ":net":
+            if n_tokens == 1 and cursor_at_space:
+                return [s + " " for s in self._NET_SUBS]
+            if n_tokens == 2 and not cursor_at_space:
+                return [s + " " for s in self._NET_SUBS if s.startswith(text)]
+
+        # ── MODE 4: ':docker' sub-commands + container/image names ──────────
+        if n_tokens >= 1 and tokens[0] == ":docker":
+            if n_tokens == 1 and cursor_at_space:
+                return [s + " " for s in self._DOCKER_SUBS]
+            if n_tokens == 2 and not cursor_at_space:
+                return [s + " " for s in self._DOCKER_SUBS if s.startswith(text)]
+            # ':docker <sub> <name>' — container or image name
+            if n_tokens >= 2:
+                sub = tokens[1].lower()
+                if sub in ("logs", "exec", "inspect", "stop", "start", "restart", "rm", "stats"):
+                    if n_tokens == 2 and cursor_at_space:
+                        return _DockerCache.containers()
+                    if n_tokens == 3 and not cursor_at_space:
+                        return self._container_completions(text)
+                if sub in ("rmi",):
+                    if n_tokens == 2 and cursor_at_space:
+                        return _DockerCache.images()
+                    if n_tokens == 3 and not cursor_at_space:
+                        return self._image_completions(text)
+
+        # ── MODE 5: ':help <command>' ────────────────────────────────────────
+        if n_tokens >= 1 and tokens[0] == ":help":
+            if n_tokens == 1 and cursor_at_space:
+                return self._all_cmds[:20]
+            if n_tokens == 2 and not cursor_at_space:
+                return [c for c in self._all_cmds if c.startswith(text)]
+
+        # ── MODE 6: ':ping / :trace / :dns / :whois / :net check' — hostnames
+        if n_tokens >= 1 and tokens[0] in (":ping", ":trace", ":dns", ":whois"):
+            if (n_tokens == 1 and cursor_at_space) or (n_tokens == 2 and not cursor_at_space):
+                # Offer recently-used hosts from history
+                hosts = self._recent_hosts(text)
+                return hosts if hosts else []
+
+        # ── MODE 7: first word, no ':' — shell command completion ────────────
+        if not cursor_at_space and n_tokens <= 1 and not text.startswith(":"):
+            # prefix match first, then fuzzy
+            prefix_m = [c for c in self._all_cmds if c.startswith(text)]
+            if prefix_m:
+                return prefix_m
+            # fuzzy fallback (only when text is ≥3 chars to avoid noise)
+            if len(text) >= 3:
+                return fuzzy_find(text, self._all_cmds, cutoff=3)
+            return []
+
+        # ── MODE 8: flags (text starts with '-') ─────────────────────────────
+        if text.startswith("-") and tokens:
+            cmd0 = tokens[0]
+            flags = self._flag_completions(cmd0, text)
+            if flags:
+                return flags
+
+        # ── MODE 9: git sub-commands ─────────────────────────────────────────
+        if n_tokens >= 1 and tokens[0] == "git":
+            git_subs = ["add","branch","checkout","cherry-pick","clone","commit",
+                        "diff","fetch","init","log","merge","pull","push","rebase",
+                        "remote","reset","revert","show","stash","status","tag"]
+            if n_tokens == 1 and cursor_at_space:
+                return [s + " " for s in git_subs]
+            if n_tokens == 2 and not cursor_at_space:
+                return [s + " " for s in git_subs if s.startswith(text)]
+
+        # ── MODE 10: systemctl sub-commands ──────────────────────────────────
+        if n_tokens >= 1 and tokens[0] == "systemctl":
+            sc_subs = ["start","stop","restart","reload","status","enable",
+                       "disable","is-active","is-enabled","list-units",
+                       "daemon-reload","cat","edit","mask","unmask"]
+            if n_tokens == 1 and cursor_at_space:
+                return [s + " " for s in sc_subs]
+            if n_tokens == 2 and not cursor_at_space:
+                return [s + " " for s in sc_subs if s.startswith(text)]
+
+        # ── MODE 11: ssh — recent hosts from ~/.ssh/config + known_hosts ─────
+        if n_tokens >= 1 and tokens[0] in ("ssh", "scp", "rsync"):
+            if (n_tokens == 1 and cursor_at_space) or (n_tokens == 2 and not cursor_at_space):
+                hosts = self._ssh_hosts(text)
+                if hosts:
+                    return hosts
+
+        # ── MODE 12: path / file completion (default) ────────────────────────
+        return self._path_completions(text)
+
+    # ── auxiliary ─────────────────────────────────────────────────────────────
+
+    def _recent_hosts(self, prefix: str = "") -> list:
+        """Extract recently-used hostnames from joo + shell history."""
+        seen: set = set()
+        hosts: list = []
+        # known common hosts
+        common = ["8.8.8.8", "1.1.1.1", "google.com", "github.com", "cloudflare.com"]
+        for h in common:
+            if h.startswith(prefix) and h not in seen:
+                seen.add(h)
+                hosts.append(h)
+        # from shell history
+        try:
+            n = readline.get_current_history_length()
+            for i in range(max(1, n - 200), n + 1):
+                entry = readline.get_history_item(i) or ""
+                for tok in entry.split():
+                    tok = re.sub(r"^https?://", "", tok).split("/")[0].split(":")[0]
+                    if re.match(r"^[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}$", tok) or \
+                       re.match(r"^\d{1,3}(\.\d{1,3}){3}$", tok):
+                        if tok.startswith(prefix) and tok not in seen:
+                            seen.add(tok)
+                            hosts.append(tok)
+        except Exception:
+            pass
+        return hosts[:12]
+
+    def _ssh_hosts(self, prefix: str = "") -> list:
+        """Parse ~/.ssh/config and ~/.ssh/known_hosts for hostnames."""
+        hosts: list = []
+        seen:  set  = set()
+        # ~/.ssh/config Hosts
+        config = Path.home() / ".ssh" / "config"
+        if config.exists():
+            try:
+                for line in config.read_text(errors="ignore").splitlines():
+                    m = re.match(r"^\s*Host\s+(.+)", line, re.IGNORECASE)
+                    if m:
+                        for h in m.group(1).split():
+                            if "*" not in h and h.startswith(prefix) and h not in seen:
+                                seen.add(h)
+                                hosts.append(h)
+            except Exception:
+                pass
+        # ~/.ssh/known_hosts
+        kh = Path.home() / ".ssh" / "known_hosts"
+        if kh.exists():
+            try:
+                for line in kh.read_text(errors="ignore").splitlines()[:100]:
+                    h = line.split()[0].split(",")[0].strip("[]").split(":")[0]
+                    if h and h.startswith(prefix) and h not in seen:
+                        seen.add(h)
+                        hosts.append(h)
+            except Exception:
+                pass
+        return hosts[:15]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Main REPL
@@ -1706,13 +2010,52 @@ class JooCLI:
     def _setup_readline(self):
         readline.set_completer(self._completer.complete)
         readline.parse_and_bind("tab: complete")
-        readline.set_completer_delims(" \t\n;|&<>")
+        # On double-Tab, show a clean formatted list instead of readline's raw dump
+        readline.set_completion_display_matches_hook(self._display_matches)
+        readline.set_completer_delims(" \t\n;|&<>()")
         if HISTORY_FILE.exists():
             try:
                 readline.read_history_file(str(HISTORY_FILE))
             except Exception:
                 pass
         readline.set_history_length(MAX_HISTORY)
+
+    def _display_matches(self, substitution: str, matches: list, longest: int):
+        """Pretty-print completions on double-Tab."""
+        if not matches:
+            return
+        print()  # newline after prompt
+        # Categorize
+        dirs     = [m for m in matches if m.endswith("/")]
+        files    = [m for m in matches if not m.endswith("/") and not m.startswith(":") and "-" not in m[:2]]
+        joo_cmds = [m for m in matches if m.startswith(":")]
+        other    = [m for m in matches if m not in dirs and m not in files and m not in joo_cmds]
+
+        col_w = max((len(m) for m in matches), default=10) + 2
+
+        def print_row(items, colour):
+            line = ""
+            per_row = max(1, 72 // col_w)
+            for i, item in enumerate(items):
+                line += c(f"{item:<{col_w}}", colour)
+                if (i + 1) % per_row == 0:
+                    print("  " + line)
+                    line = ""
+            if line:
+                print("  " + line)
+
+        if joo_cmds:
+            print(c("  joo commands:", "yellow", "dim"))
+            print_row(joo_cmds, "cyan")
+        if dirs:
+            print(c("  directories:", "blue", "dim"))
+            print_row(dirs, "blue")
+        if files or other:
+            print_row(files + other, "white")
+
+        # Reprint the prompt + current input
+        print(f"\n{self.PROMPT}", end="", flush=True)
+        print(readline.get_line_buffer(), end="", flush=True)
 
     def _save_history(self):
         try:
@@ -1914,22 +2257,39 @@ class JooCLI:
             name = tokens[0] if tokens else ""
             tail = int(tokens[1]) if len(tokens) > 1 and tokens[1].isdigit() else 50
             if not name:
-                print(c("  Usage: :docker logs <container> [lines]", "yellow")); return
+                print(c("  Usage: :docker logs <container> [lines]", "yellow"))
+                self._docker_list_hint()
+                return
             print(f"\n{docker_logs(name, tail)}\n")
         elif sub == "exec":
             tokens = rest.split()
             name = tokens[0] if tokens else ""
             sh   = tokens[1] if len(tokens) > 1 else "sh"
             if not name:
-                print(c("  Usage: :docker exec <container> [sh|bash]", "yellow")); return
+                print(c("  Usage: :docker exec <container> [sh|bash]", "yellow"))
+                self._docker_list_hint()
+                return
             docker_exec(name, sh)
         elif sub == "inspect":
             if not rest:
-                print(c("  Usage: :docker inspect <container>", "yellow")); return
+                print(c("  Usage: :docker inspect <container>", "yellow"))
+                self._docker_list_hint()
+                return
             print(f"\n{docker_inspect(rest)}\n")
         elif sub in ("stop", "start", "restart", "rm"):
             if not rest:
-                print(c(f"  Usage: :docker {sub} <container>", "yellow")); return
+                print(c(f"  Usage: :docker {sub} <container>", "yellow"))
+                self._docker_list_hint()
+                return
+            # Fuzzy check
+            all_names = _DockerCache.containers()
+            if rest not in all_names:
+                suggestion = _docker_fuzzy_container(rest)
+                print(c(f"\n  ✗  Container '{rest}' not found.", "red"))
+                if suggestion and suggestion != rest:
+                    print(c(f"  Did you mean: ", "yellow") + c(f":docker {sub} {suggestion}", "cyan"))
+                print()
+                return
             out, err, code = run_cmd(f"docker {sub} {rest}")
             if code == 0:
                 print(c(f"\n  ✓  docker {sub} {rest}\n", "green"))
@@ -1937,6 +2297,13 @@ class JooCLI:
                 print(c(f"\n  ✗  {err}\n", "red"))
         else:
             print(f"\n{docker_report()}\n")
+
+    def _docker_list_hint(self):
+        """Print a quick list of available containers."""
+        names = _DockerCache.containers()
+        if names:
+            print(c("  Available containers: ", "dim") + "  ".join(c(n, "cyan") for n in names[:8]))
+        print()
 
     def _cmd_history(self, arg):
         parts  = arg.split(None, 1)
