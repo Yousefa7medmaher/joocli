@@ -3,36 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JooCLI — Smart Terminal Assistant</title>
+<title>JooCLI v5.0 — Smart Terminal Assistant for DevOps & Developers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,300&family=Familjen+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,300&family=Bebas+Neue&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:        #05080c;
-  --bg2:       #0a0e14;
-  --bg3:       #111720;
-  --bg4:       #161e2a;
-  --border:    #1e2733;
-  --border2:   #2a3545;
-  --cyan:      #00d4e8;
-  --cyan-dim:  #0a2a30;
-  --cyan-glow: rgba(0,212,232,0.12);
-  --green:     #00e676;
-  --green-dim: #0a2016;
-  --yellow:    #ffd54f;
-  --yellow-dim:#2a2000;
-  --red:       #ff5252;
-  --red-dim:   #2a0a0a;
-  --blue:      #448aff;
-  --blue-dim:  #0a1a3a;
-  --purple:    #e040fb;
-  --purple-dim:#1a0a2a;
-  --orange:    #ff6d00;
-  --text:      #dce8f0;
-  --text2:     #7a90a4;
-  --text3:     #3a4a58;
-  --mono:      'IBM Plex Mono', monospace;
-  --sans:      'Familjen Grotesk', sans-serif;
+  --bg:         #040710;
+  --bg2:        #080d1a;
+  --bg3:        #0d1424;
+  --bg4:        #121b2e;
+  --border:     #1a2540;
+  --border2:    #243050;
+  --cyan:       #00e5ff;
+  --cyan-dim:   #041820;
+  --cyan-glow:  rgba(0,229,255,0.10);
+  --green:      #00e676;
+  --green-dim:  #041a0e;
+  --yellow:     #ffe066;
+  --yellow-dim: #1e1800;
+  --red:        #ff4f4f;
+  --red-dim:    #1e0808;
+  --blue:       #4d9fff;
+  --blue-dim:   #071428;
+  --purple:     #d966ff;
+  --purple-dim: #160828;
+  --orange:     #ff8c42;
+  --orange-dim: #1e0e00;
+  --text:       #cdd8ea;
+  --text2:      #6a7f99;
+  --text3:      #2e3f55;
+  --mono:       'IBM Plex Mono', monospace;
+  --sans:       'Bebas Neue', sans-serif;
+  --sans2:      'Outfit', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,533 +48,647 @@ body {
   overflow-x: hidden;
 }
 
-/* scanlines */
+/* CRT scanlines */
 body::before {
   content: '';
   position: fixed; inset: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
-  pointer-events: none;
-  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+  );
+  pointer-events: none; z-index: 9999;
 }
 
-/* dot grid */
+/* Subtle grid */
 body::after {
   content: '';
   position: fixed; inset: 0;
-  background-image: radial-gradient(rgba(0,212,232,0.06) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events: none;
-  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
 }
 
 /* ── NAV ── */
 nav {
-  position: fixed; top: 0; left: 0; right: 0;
-  z-index: 100;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.9rem 3rem;
-  background: rgba(5,8,12,0.9);
-  backdrop-filter: blur(16px);
+  padding: 0.75rem 3.5rem;
+  background: rgba(4,7,16,0.92);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
 }
 
-.nav-logo {
-  font-family: var(--sans);
-  font-weight: 700; font-size: 1.2rem;
-  color: var(--cyan); text-decoration: none;
-  letter-spacing: -0.02em;
-  display: flex; align-items: center; gap: 0.4rem;
+/* 3D Logo */
+.logo-wrap {
+  text-decoration: none;
+  display: flex; align-items: center; gap: 0.75rem;
+  perspective: 400px;
 }
-.nav-logo::before {
-  content: '❯';
-  color: var(--text3); font-size: 0.9rem;
-  font-family: var(--mono);
+.logo-cube-wrap {
+  width: 34px; height: 34px;
+  perspective: 180px;
+  flex-shrink: 0;
 }
-.nav-version {
-  font-family: var(--mono); font-size: 0.6rem;
-  background: var(--cyan-dim); color: var(--cyan);
-  border: 1px solid var(--cyan); border-radius: 3px;
-  padding: 0.1rem 0.4rem; letter-spacing: 0.05em;
+.logo-cube {
+  width: 34px; height: 34px;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: cubeFloat 6s ease-in-out infinite, cubeSpin 12s linear infinite;
+}
+.logo-cube:hover {
+  animation: cubeSpin 1.5s linear infinite, cubeFloat 6s ease-in-out infinite;
+}
+.cube-face {
+  position: absolute; width: 34px; height: 34px;
+  border: 1.5px solid rgba(0,229,255,0.55);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 600; font-size: 0.72rem;
+  backface-visibility: hidden;
+}
+.cube-face.front  {
+  background: linear-gradient(135deg, rgba(0,229,255,0.18), rgba(0,229,255,0.06));
+  transform: translateZ(17px);
+  color: var(--cyan); font-size: 0.8rem;
+  box-shadow: inset 0 0 12px rgba(0,229,255,0.15);
+}
+.cube-face.back   {
+  background: rgba(0,229,255,0.06);
+  transform: rotateY(180deg) translateZ(17px);
+  color: var(--cyan);
+}
+.cube-face.left   {
+  background: rgba(0,229,255,0.04);
+  transform: rotateY(-90deg) translateZ(17px);
+  color: rgba(0,229,255,0.5); font-size: 0.55rem;
+}
+.cube-face.right  {
+  background: rgba(0,229,255,0.08);
+  transform: rotateY(90deg) translateZ(17px);
+  color: rgba(0,229,255,0.6); font-size: 0.55rem;
+}
+.cube-face.top    {
+  background: linear-gradient(180deg, rgba(0,229,255,0.22), rgba(0,229,255,0.06));
+  transform: rotateX(90deg) translateZ(17px);
+  color: rgba(0,229,255,0.7); font-size: 0.55rem;
+}
+.cube-face.bottom {
+  background: rgba(0,229,255,0.03);
+  transform: rotateX(-90deg) translateZ(17px);
+  color: rgba(0,229,255,0.3);
+}
+@keyframes cubeSpin {
+  0%   { transform: rotateX(-15deg) rotateY(0deg); }
+  100% { transform: rotateX(-15deg) rotateY(360deg); }
+}
+@keyframes cubeFloat {
+  0%,100% { transform: rotateX(-15deg) rotateY(var(--ry,0deg)) translateY(0px); }
+  50%     { transform: rotateX(-15deg) rotateY(var(--ry,180deg)) translateY(-3px); }
 }
 
-.nav-links { display: flex; gap: 1.5rem; list-style: none; }
+.logo-text-wrap {
+  display: flex; flex-direction: column; gap: 1px; line-height: 1;
+}
+.logo-name {
+  font-family: var(--sans); font-weight: 400; font-size: 1.3rem;
+  color: var(--cyan); letter-spacing: -0.01em;
+  text-shadow: 0 0 20px rgba(0,229,255,0.4);
+}
+.logo-sub {
+  font-family: var(--mono); font-size: 0.55rem;
+  color: var(--text3); letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.logo-badge {
+  font-family: var(--mono); font-size: 0.56rem;
+  background: var(--cyan-dim); color: var(--cyan);
+  border: 1px solid rgba(0,229,255,0.35); border-radius: 3px;
+  padding: 0.1rem 0.42rem; letter-spacing: 0.06em;
+  align-self: flex-start;
+}
+
+.nav-links { display: flex; gap: 1.75rem; list-style: none; align-items: center; }
 .nav-links a {
   color: var(--text2); text-decoration: none;
-  font-size: 0.75rem; letter-spacing: 0.04em;
+  font-family: var(--sans2); font-size: 0.72rem; letter-spacing: 0.04em;
   transition: color 0.2s;
 }
 .nav-links a:hover { color: var(--cyan); }
 .nav-cta {
   background: var(--cyan) !important; color: var(--bg) !important;
-  padding: 0.35rem 1rem; border-radius: 4px;
-  font-weight: 600 !important;
+  padding: 0.38rem 1.1rem; border-radius: 4px;
+  font-weight: 600 !important; letter-spacing: 0.02em !important;
 }
-.nav-cta:hover { opacity: 0.85 !important; }
 
 /* ── HERO ── */
 .hero {
   position: relative; z-index: 1;
   min-height: 100vh;
   display: flex; align-items: center;
-  padding: 7rem 3rem 4rem;
-  max-width: 1280px; margin: 0 auto;
-  gap: 5rem;
+  padding: 7.5rem 3.5rem 5rem;
+  max-width: 1300px; margin: 0 auto;
+  gap: 4rem;
 }
-.hero-left { flex: 1.1; min-width: 0; }
-.hero-right { flex: 0.9; min-width: 0; }
+.hero-left { flex: 0 0 46%; min-width: 0; }
+.hero-right { flex: 1; min-width: 0; }
 
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  background: var(--green-dim); border: 1px solid var(--green);
-  color: var(--green); font-size: 0.65rem;
-  padding: 0.25rem 0.75rem; border-radius: 20px;
-  margin-bottom: 1.5rem;
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  margin-bottom: 1.75rem;
   animation: fadeUp 0.5s ease both;
 }
-.badge-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--green); animation: pulse 2s infinite;
+.eyebrow-pill {
+  background: var(--green-dim); border: 1px solid var(--green);
+  color: var(--green); font-size: 0.62rem; padding: 0.22rem 0.75rem;
+  border-radius: 20px; display: flex; align-items: center; gap: 0.45rem;
+  font-weight: 600;
 }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.live-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+  animation: livepulse 2s ease-in-out infinite;
+}
+@keyframes livepulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
+.eyebrow-version {
+  font-size: 0.62rem; color: var(--text3); letter-spacing: 0.08em;
+}
 
 h1 {
-  font-family: var(--sans);
-  font-size: clamp(2.6rem, 5.5vw, 4.6rem);
-  font-weight: 700; line-height: 1.06; letter-spacing: -0.03em;
-  margin-bottom: 1.4rem;
-  animation: fadeUp 0.5s 0.08s ease both;
+  font-family: var(--sans); font-weight: 800;
+  font-size: clamp(2.8rem, 4.8vw, 4.6rem);
+  line-height: 1.08; letter-spacing: -0.01em;
+  margin-bottom: 1.8rem;
+  animation: fadeUp 0.5s 0.07s ease both;
 }
-h1 .ac { color: var(--cyan); }
-h1 .dm { color: var(--text3); }
+h1 .h1-ac  { color: var(--cyan); display: block; }
+h1 .h1-dim { color: var(--text3); display: block; }
+h1 .h1-wh  { color: var(--text); display: block; }
 
 .hero-desc {
-  font-family: var(--sans); font-size: 1.05rem;
-  color: var(--text2); max-width: 500px;
-  margin-bottom: 2rem; line-height: 1.75; font-weight: 400;
-  animation: fadeUp 0.5s 0.16s ease both;
+  font-family: var(--sans2); font-size: 1.05rem; font-weight: 400;
+  color: var(--text2); max-width: 510px;
+  margin-bottom: 2.2rem; line-height: 1.8;
+  animation: fadeUp 0.5s 0.14s ease both;
 }
 
 .hero-actions {
-  display: flex; gap: 0.75rem; flex-wrap: wrap;
-  animation: fadeUp 0.5s 0.24s ease both;
+  display: flex; gap: 0.85rem; flex-wrap: wrap;
+  animation: fadeUp 0.5s 0.21s ease both;
 }
-
 .btn {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  padding: 0.7rem 1.5rem; border-radius: 5px;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.72rem 1.6rem; border-radius: 5px;
   font-family: var(--mono); font-size: 0.82rem;
   text-decoration: none; cursor: pointer; border: none;
-  transition: all 0.2s; font-weight: 400;
+  transition: all 0.2s; white-space: nowrap;
 }
-.btn-primary { background: var(--cyan); color: var(--bg); }
-.btn-primary:hover { background: #33ddf0; transform: translateY(-1px); }
-.btn-secondary {
-  background: transparent; color: var(--text);
+.btn-primary { background: var(--cyan); color: #040710; font-weight: 600; }
+.btn-primary:hover { background: #33eeff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,229,255,0.25); }
+.btn-ghost {
+  background: transparent; color: var(--text2);
   border: 1px solid var(--border2);
 }
-.btn-secondary:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-1px); }
+.btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); }
 
 .hero-stats {
-  display: flex; gap: 2rem; margin-top: 2.5rem;
-  animation: fadeUp 0.5s 0.32s ease both;
-  padding-top: 2rem; border-top: 1px solid var(--border);
+  display: flex; gap: 2.5rem; margin-top: 2.75rem;
+  padding-top: 2.25rem; border-top: 1px solid var(--border);
+  animation: fadeUp 0.5s 0.28s ease both;
 }
-.stat-num { font-family: var(--sans); font-size: 1.7rem; font-weight: 700; color: var(--cyan); }
-.stat-lbl { font-size: 0.65rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; display: block; }
+.stat { }
+.stat-num { font-family: var(--sans); font-size: 1.9rem; font-weight: 800; color: var(--cyan); line-height: 1; }
+.stat-lbl { font-family: var(--sans2); font-size: 0.6rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 4px; display: block; }
 
-/* ── TERMINAL ── */
-.term-window {
+/* ── TERMINAL WINDOW ── */
+.term-win {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; overflow: hidden;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 80px rgba(0,212,232,0.05);
+  border-radius: 11px; overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.75), 0 0 60px rgba(0,229,255,0.06);
 }
-.term-titlebar {
-  background: var(--bg3); padding: 0.65rem 1rem;
-  display: flex; align-items: center; gap: 0.4rem;
+.term-bar {
+  background: var(--bg3); padding: 0.7rem 1rem;
+  display: flex; align-items: center; gap: 0.45rem;
   border-bottom: 1px solid var(--border);
 }
-.td { width: 11px; height: 11px; border-radius: 50%; }
-.td.r{background:#ff5f57}.td.y{background:#ffbd2e}.td.g{background:#28c840}
-.term-title { flex: 1; text-align: center; font-size: 0.7rem; color: var(--text3); margin-left: 0.5rem; }
+.tb-dot { width: 11px; height: 11px; border-radius: 50%; }
+.tb-dot.r { background: #ff5f57; }
+.tb-dot.y { background: #ffbd2e; }
+.tb-dot.g { background: #28c840; }
+.tb-title { flex: 1; text-align: center; font-size: 0.68rem; color: var(--text3); }
 
 .term-body {
-  padding: 1.2rem 1.4rem;
-  font-size: 0.77rem; line-height: 1.85;
-  min-height: 360px;
+  padding: 1.3rem 1.5rem;
+  font-size: 0.76rem; line-height: 1.9;
 }
-
-.tl { display: block; }
+.tl  { display: block; }
 .tc  { color: var(--cyan); }
 .tg  { color: var(--green); }
 .ty  { color: var(--yellow); }
 .tr  { color: var(--red); }
 .tb  { color: var(--blue); }
 .tp  { color: var(--purple); }
+.to  { color: var(--orange); }
 .tw  { color: var(--text); }
 .tdm { color: var(--text3); }
 .tbold { font-weight: 600; }
-
 .cursor {
   display: inline-block; width: 7px; height: 13px;
-  background: var(--cyan); margin-left: 1px; vertical-align: middle;
-  animation: blink 1s step-end infinite;
+  background: var(--cyan); margin-left: 2px; vertical-align: middle;
+  animation: blink 1.1s step-end infinite;
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.prompt-line { display: flex; align-items: baseline; gap: 0; }
+.prompt-joo { color: var(--green); font-weight: 600; }
+.prompt-arr { color: var(--blue); }
 
-/* ── SECTIONS ── */
+/* ── DIVIDER ── */
+.divider {
+  height: 1px; width: 100%;
+  background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+}
+
+/* ── SECTION SHARED ── */
 .section {
   position: relative; z-index: 1;
-  max-width: 1100px; margin: 0 auto;
-  padding: 6rem 3rem;
+  max-width: 1140px; margin: 0 auto;
+  padding: 6.5rem 3.5rem;
 }
-.sec-label {
-  font-size: 0.65rem; letter-spacing: 0.18em;
+.sec-kicker {
+  font-size: 0.62rem; letter-spacing: 0.2em;
   color: var(--cyan); text-transform: uppercase;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.65rem; display: block;
 }
 .sec-title {
-  font-family: var(--sans); font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-  font-weight: 700; letter-spacing: -0.025em; margin-bottom: 0.75rem;
+  font-family: var(--sans); font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.8rem;
+  line-height: 1.08;
 }
 .sec-sub {
-  font-family: var(--sans); color: var(--text2);
-  font-size: 1rem; max-width: 540px; margin-bottom: 3rem;
-  line-height: 1.7; font-weight: 400;
+  font-family: var(--sans2); color: var(--text2); font-size: 1rem;
+  max-width: 560px; margin-bottom: 3.5rem; line-height: 1.75;
 }
 
-.divider {
-  width: 100%; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border) 25%, var(--border) 75%, transparent);
+/* ── REVEAL ── */
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
+.reveal.visible { opacity: 1; transform: translateY(0); }
 
-/* ── AI PROVIDERS SECTION ── */
+/* ── PROVIDERS ── */
 .providers-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 2.5rem;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+  margin-bottom: 2rem;
 }
-.provider-card {
+.prov-card {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 1.5rem 1.25rem;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem;
-  transition: all 0.3s; position: relative; overflow: hidden;
+  border-radius: 10px; padding: 1.4rem 1.2rem;
+  display: flex; flex-direction: column; gap: 0.8rem;
+  transition: all 0.3s; position: relative; overflow: hidden; cursor: default;
 }
-.provider-card::before {
-  content: ''; position: absolute; inset: 0;
-  opacity: 0; transition: opacity 0.3s;
+.prov-card::before {
+  content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s;
 }
-.provider-card:hover { transform: translateY(-3px); }
-.provider-card.pc-claude::before { background: linear-gradient(135deg, rgba(188,140,255,.06), transparent); }
-.provider-card.pc-openai::before { background: linear-gradient(135deg, rgba(0,230,118,.06), transparent); }
-.provider-card.pc-groq::before   { background: linear-gradient(135deg, rgba(255,213,79,.06), transparent); }
-.provider-card.pc-gemini::before { background: linear-gradient(135deg, rgba(68,138,255,.06), transparent); }
-.provider-card:hover::before { opacity: 1; }
-.provider-card:hover.pc-claude { border-color: var(--purple); }
-.provider-card:hover.pc-openai { border-color: var(--green); }
-.provider-card:hover.pc-groq   { border-color: var(--yellow); }
-.provider-card:hover.pc-gemini { border-color: var(--blue); }
-
-.prov-logo {
-  width: 38px; height: 38px; border-radius: 8px;
+.prov-card:hover { transform: translateY(-4px); }
+.prov-card.pc-c::before { background: linear-gradient(135deg, rgba(217,102,255,.07), transparent 60%); }
+.prov-card.pc-o::before { background: linear-gradient(135deg, rgba(0,230,118,.07), transparent 60%); }
+.prov-card.pc-g::before { background: linear-gradient(135deg, rgba(255,224,102,.07), transparent 60%); }
+.prov-card.pc-m::before { background: linear-gradient(135deg, rgba(77,159,255,.07), transparent 60%); }
+.prov-card:hover.pc-c { border-color: rgba(217,102,255,.5); }
+.prov-card:hover.pc-o { border-color: rgba(0,230,118,.5); }
+.prov-card:hover.pc-g { border-color: rgba(255,224,102,.5); }
+.prov-card:hover.pc-m { border-color: rgba(77,159,255,.5); }
+.prov-card:hover::before { opacity: 1; }
+.prov-icon {
+  width: 36px; height: 36px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
-.pl-claude  { background: var(--purple-dim); border: 1px solid var(--purple); }
-.pl-openai  { background: var(--green-dim);  border: 1px solid var(--green); }
-.pl-groq    { background: var(--yellow-dim); border: 1px solid var(--yellow); }
-.pl-gemini  { background: var(--blue-dim);   border: 1px solid var(--blue); }
-
-.prov-name {
-  font-family: var(--sans); font-weight: 700;
-  font-size: 0.9rem; margin-bottom: 0.1rem;
-}
-.prov-model { font-size: 0.65rem; color: var(--text3); }
-.prov-key-prefix {
-  font-size: 0.65rem;
+.pi-c { background: var(--purple-dim); border: 1px solid rgba(217,102,255,.4); }
+.pi-o { background: var(--green-dim);  border: 1px solid rgba(0,230,118,.4); }
+.pi-g { background: var(--yellow-dim); border: 1px solid rgba(255,224,102,.4); }
+.pi-m { background: var(--blue-dim);   border: 1px solid rgba(77,159,255,.4); }
+.prov-name  { font-family: var(--sans2); font-weight: 700; font-size: 0.88rem; margin-bottom: 2px; }
+.prov-model { font-size: 0.62rem; color: var(--text3); font-family: var(--mono); }
+.prov-prefix {
+  margin-top: auto;
+  font-size: 0.63rem; font-family: var(--mono);
   background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 4px; padding: 0.2rem 0.55rem;
-  color: var(--text2); font-family: var(--mono);
+  border-radius: 4px; padding: 0.18rem 0.5rem;
+  color: var(--text2); display: inline-block;
 }
 
-.ai-commands {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; overflow: hidden;
-}
-.ai-cmd-row {
-  display: grid; grid-template-columns: auto 1fr auto;
+/* ── AI COMMANDS TABLE ── */
+.ai-tbl { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+.ai-tbl-row {
+  display: grid; grid-template-columns: 220px 1fr 80px;
   align-items: center; gap: 1.5rem;
-  padding: 0.9rem 1.4rem;
-  border-bottom: 1px solid rgba(30,39,51,0.6);
+  padding: 0.9rem 1.5rem;
+  border-bottom: 1px solid var(--border);
   transition: background 0.2s;
 }
-.ai-cmd-row:last-child { border-bottom: none; }
-.ai-cmd-row:hover { background: rgba(0,212,232,0.02); }
-.ai-cmd-name { color: var(--yellow); font-size: 0.8rem; white-space: nowrap; font-weight: 600; }
-.ai-cmd-desc { font-family: var(--sans); color: var(--text2); font-size: 0.85rem; }
-.ai-cmd-tag  { font-size: 0.6rem; padding: 0.15rem 0.5rem; border-radius: 20px; white-space: nowrap; }
+.ai-tbl-row:last-child { border-bottom: none; }
+.ai-tbl-row:hover { background: rgba(0,229,255,.025); }
+.ai-tbl-row.header { background: var(--bg3); }
+.atr-cmd  { color: var(--yellow); font-size: 0.78rem; font-weight: 600; }
+.atr-desc { font-family: var(--sans2); color: var(--text2); font-size: 0.84rem; }
+.atr-hdr  { font-size: 0.6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .14em; }
+.badge-new {
+  font-size: 0.58rem; padding: 0.12rem 0.48rem; border-radius: 20px;
+  background: var(--green-dim); color: var(--green);
+  border: 1px solid rgba(0,230,118,.4); font-weight: 700; white-space: nowrap;
+}
+.badge-v5 {
+  font-size: 0.58rem; padding: 0.12rem 0.48rem; border-radius: 20px;
+  background: var(--cyan-dim); color: var(--cyan);
+  border: 1px solid rgba(0,229,255,.4); font-weight: 700; white-space: nowrap;
+}
+.badge-ai {
+  font-size: 0.58rem; padding: 0.12rem 0.48rem; border-radius: 20px;
+  background: var(--purple-dim); color: var(--purple);
+  border: 1px solid rgba(217,102,255,.4); font-weight: 700;
+}
 
-/* ── INSTALL TABS ── */
-.install-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.install-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg3); overflow-x: auto; }
-.tab-btn {
-  padding: 0.75rem 1.4rem; background: none;
-  border: none; border-bottom: 2px solid transparent;
-  color: var(--text2); font-family: var(--mono); font-size: 0.75rem;
+/* ── STATUS DEMO ── */
+.status-demo {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 9px; padding: 1.2rem 1.5rem;
+}
+.sd-head { font-size: 0.6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .14em; margin-bottom: 0.9rem; }
+.sd-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.3rem 0; font-size: 0.74rem; }
+.sd-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.sd-active { background: var(--green); box-shadow: 0 0 7px var(--green); }
+.sd-ready  { background: var(--cyan); }
+.sd-warn   { background: var(--yellow); }
+.sd-nokey  { background: var(--text3); }
+.sd-name   { color: var(--cyan); min-width: 82px; }
+.sd-footer { margin-top: .9rem; padding-top: .8rem; border-top: 1px solid var(--border); font-size: .67rem; color: var(--text3); }
+
+/* ── INSTALL ── */
+.install-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
+.itabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg3); overflow-x: auto; }
+.itab {
+  padding: 0.78rem 1.4rem; background: none; border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text2); font-family: var(--mono); font-size: 0.73rem;
   cursor: pointer; transition: all 0.2s; white-space: nowrap;
 }
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-.tab-panel { display: none; padding: 2rem; }
-.tab-panel.active { display: block; }
-
-.install-step { display: flex; gap: 1.25rem; margin-bottom: 1.75rem; align-items: flex-start; }
-.step-num {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: var(--cyan-dim); border: 1px solid var(--cyan);
-  color: var(--cyan); font-size: 0.65rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; margin-top: 3px;
+.itab:hover { color: var(--text); }
+.itab.on { color: var(--cyan); border-bottom-color: var(--cyan); }
+.ipanel { display: none; padding: 2.2rem; }
+.ipanel.on { display: block; }
+.istep { display: flex; gap: 1.3rem; margin-bottom: 2rem; align-items: flex-start; }
+.istep:last-child { margin-bottom: 0; }
+.inum {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: var(--cyan-dim); border: 1px solid rgba(0,229,255,.5);
+  color: var(--cyan); font-size: 0.64rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-top: 3px;
 }
-.step-title { font-family: var(--sans); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.45rem; }
-.step-body { flex: 1; }
-
-.code-block {
+.ibody { flex: 1; }
+.ititle { font-family: var(--sans2); font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; }
+.icode {
   background: var(--bg); border: 1px solid var(--border);
-  border-radius: 7px; padding: 0.85rem 1.1rem;
-  font-size: 0.78rem; position: relative; overflow-x: auto;
+  border-radius: 7px; padding: 0.9rem 1.15rem;
+  font-size: 0.77rem; position: relative; overflow-x: auto;
 }
-.code-block pre { margin: 0; color: var(--green); white-space: pre; }
-.code-block .cm { color: var(--text3); }
-.code-block .kw { color: var(--cyan); }
-.code-block .st { color: var(--yellow); }
-.code-block .fl { color: var(--blue); }
-.copy-btn {
-  position: absolute; top: 0.45rem; right: 0.45rem;
+.icode pre { margin: 0; color: var(--green); white-space: pre; line-height: 1.7; }
+.icode .cm { color: var(--text3); }
+.icode .kw { color: var(--cyan); }
+.icode .st { color: var(--yellow); }
+.icode .fl { color: var(--blue); }
+.icode .ok { color: var(--green); }
+.cpybtn {
+  position: absolute; top: 0.5rem; right: 0.5rem;
   background: var(--bg3); border: 1px solid var(--border);
   color: var(--text2); font-family: var(--mono);
   font-size: 0.6rem; padding: 0.2rem 0.55rem;
   border-radius: 3px; cursor: pointer; transition: all 0.2s;
 }
-.copy-btn:hover { color: var(--cyan); border-color: var(--cyan); }
-.copy-btn.ok { color: var(--green); border-color: var(--green); }
-.step-note { font-size: 0.72rem; color: var(--text2); margin-top: 0.45rem; }
-.step-note a { color: var(--blue); text-decoration: none; }
+.cpybtn:hover { color: var(--cyan); border-color: var(--cyan); }
+.cpybtn.ok { color: var(--green); border-color: var(--green); }
+.inote { font-size: 0.7rem; color: var(--text2); margin-top: 0.5rem; line-height: 1.6; }
+.inote a { color: var(--blue); text-decoration: none; }
+.inote a:hover { text-decoration: underline; }
 
 /* ── FEATURES GRID ── */
-.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(295px, 1fr)); gap: 1.25rem; }
-
-.feature-card {
+.feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.25rem; }
+.feat-card {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 1.6rem;
+  border-radius: 11px; padding: 1.65rem;
   transition: all 0.3s; position: relative; overflow: hidden;
 }
-.feature-card::after {
+.feat-card::after {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(0,212,232,0.04), transparent);
+  background: linear-gradient(135deg, rgba(0,229,255,.04), transparent 55%);
   opacity: 0; transition: opacity 0.3s;
 }
-.feature-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-.feature-card:hover::after { opacity: 1; }
-
-.feat-icon {
-  width: 40px; height: 40px; border-radius: 9px;
+.feat-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+.feat-card:hover::after { opacity: 1; }
+.feat-ico {
+  width: 42px; height: 42px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; margin-bottom: 0.9rem;
+  font-size: 1.1rem; margin-bottom: 1rem;
 }
-.fi-c  { background: var(--cyan-dim);   border: 1px solid var(--cyan); }
-.fi-g  { background: var(--green-dim);  border: 1px solid var(--green); }
-.fi-y  { background: var(--yellow-dim); border: 1px solid var(--yellow); }
-.fi-b  { background: var(--blue-dim);   border: 1px solid var(--blue); }
-.fi-p  { background: var(--purple-dim); border: 1px solid var(--purple); }
-.fi-r  { background: var(--red-dim);    border: 1px solid var(--red); }
-.fi-o  { background: #1a0f00;           border: 1px solid var(--orange); }
+.fi-c { background: var(--cyan-dim);   border: 1px solid rgba(0,229,255,.4); }
+.fi-g { background: var(--green-dim);  border: 1px solid rgba(0,230,118,.4); }
+.fi-y { background: var(--yellow-dim); border: 1px solid rgba(255,224,102,.4); }
+.fi-b { background: var(--blue-dim);   border: 1px solid rgba(77,159,255,.4); }
+.fi-p { background: var(--purple-dim); border: 1px solid rgba(217,102,255,.4); }
+.fi-r { background: var(--red-dim);    border: 1px solid rgba(255,79,79,.4); }
+.fi-o { background: var(--orange-dim); border: 1px solid rgba(255,140,66,.4); }
+.feat-title { font-family: var(--sans2); font-weight: 700; font-size: 0.97rem; margin-bottom: 0.45rem; }
+.feat-desc  { font-family: var(--sans2); font-size: 0.83rem; color: var(--text2); line-height: 1.65; }
+.feat-tag   { margin-top: 0.9rem; display: inline-block; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 0.3rem 0.7rem; font-size: 0.68rem; color: var(--cyan); }
+.feat-new-badge {
+  position: absolute; top: 1rem; right: 1rem;
+  font-size: 0.55rem; padding: 0.1rem 0.45rem; border-radius: 20px;
+  background: var(--green-dim); color: var(--green);
+  border: 1px solid rgba(0,230,118,.4); font-weight: 700;
+}
 
-.feat-title { font-family: var(--sans); font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; }
-.feat-desc  { font-family: var(--sans); font-size: 0.84rem; color: var(--text2); line-height: 1.6; font-weight: 400; }
-.feat-cmd {
-  margin-top: 0.85rem; display: inline-block;
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 5px; padding: 0.3rem 0.7rem;
-  font-size: 0.7rem; color: var(--cyan);
-}
+/* ── DEMO TERMINALS ── */
+.demo-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+.demo-lbl { font-size: 0.63rem; color: var(--text3); text-transform: uppercase; letter-spacing: .12em; }
+.demo-badge-new { font-size: 0.55rem; padding: 0.1rem 0.45rem; border-radius: 20px; background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,.4); font-weight: 700; }
+.demo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.demo-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
 
 /* ── COMMANDS TABLE ── */
-.cmd-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-.cmd-table th {
-  text-align: left; padding: 0.7rem 1rem;
-  font-size: 0.6rem; letter-spacing: 0.14em; color: var(--text3);
+.cmd-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
+.cmd-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; }
+.cmd-tbl th {
+  text-align: left; padding: 0.75rem 1.2rem;
+  font-size: 0.6rem; letter-spacing: .15em; color: var(--text3);
   text-transform: uppercase; border-bottom: 1px solid var(--border);
   background: var(--bg3);
 }
-.cmd-table td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(30,39,51,0.5); vertical-align: top; }
-.cmd-table tr:hover td { background: rgba(0,212,232,0.02); }
-.cmd-name { color: var(--yellow); font-weight: 600; white-space: nowrap; }
-.cmd-desc { font-family: var(--sans); color: var(--text2); font-size: 0.83rem; font-weight: 400; }
+.cmd-tbl td { padding: 0.78rem 1.2rem; border-bottom: 1px solid rgba(26,37,64,0.7); vertical-align: middle; }
+.cmd-tbl tr:last-child td { border-bottom: none; }
+.cmd-tbl tr:hover td { background: rgba(0,229,255,.02); }
+.cmd-n { color: var(--yellow); font-weight: 600; white-space: nowrap; }
+.cmd-d { font-family: var(--sans2); color: var(--text2); font-size: 0.82rem; }
+.tag { display: inline-block; font-size: 0.57rem; padding: 0.1rem 0.42rem; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.t-ai  { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(217,102,255,.4); }
+.t-doc { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(77,159,255,.4); }
+.t-k8s { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,140,66,.4); }
+.t-net { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,230,118,.4); }
+.t-dev { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(255,224,102,.4); }
+.t-cor { background: var(--cyan-dim);   color: var(--cyan);   border: 1px solid rgba(0,229,255,.4); }
 
-.tag {
-  display: inline-block; font-size: 0.58rem;
-  padding: 0.12rem 0.45rem; border-radius: 20px;
-  font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-}
-.tag-ai     { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple); }
-.tag-docker { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue); }
-.tag-net    { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green); }
-.tag-core   { background: var(--cyan-dim);   color: var(--cyan);   border: 1px solid var(--cyan); }
-
-/* ── DEMO TERMINALS ── */
-.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-.demo-label { font-size: 0.65rem; color: var(--text3); margin-bottom: 0.45rem; letter-spacing: 0.1em; text-transform: uppercase; }
-
-/* ── REQUIREMENTS ── */
-.req-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; }
-.req-card {
+/* ── PLUGIN SECTION ── */
+.plugin-example {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 9px; padding: 1.2rem 1.4rem;
-  display: flex; align-items: center; gap: 1rem;
+  border-radius: 11px; overflow: hidden;
 }
-.req-icon { font-size: 1.3rem; flex-shrink: 0; }
-.req-name { font-family: var(--sans); font-weight: 700; font-size: 0.88rem; margin-bottom: 0.2rem; }
-.req-detail { font-size: 0.68rem; color: var(--text2); }
-.req-check {
-  margin-left: auto; width: 18px; height: 18px;
-  background: var(--green-dim); border: 1px solid var(--green);
-  border-radius: 50%; color: var(--green); font-size: 0.6rem;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+.plugin-header {
+  background: var(--bg3); padding: 0.9rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
 }
+.plugin-filename { font-size: 0.75rem; color: var(--cyan); }
+.plugin-path { font-size: 0.65rem; color: var(--text3); }
 
-/* ── CLOUDFLARE WARNING BOX ── */
-.warn-box {
-  background: rgba(255,82,82,0.06); border: 1px solid rgba(255,82,82,0.3);
-  border-radius: 9px; padding: 1.25rem 1.5rem;
-  display: flex; gap: 1rem; align-items: flex-start; margin-top: 2rem;
+/* ── SECURITY SECTION ── */
+.security-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.sec-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.4rem;
 }
-.warn-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.1rem; }
-.warn-title { font-family: var(--sans); font-weight: 700; font-size: 0.9rem; color: var(--red); margin-bottom: 0.35rem; }
-.warn-body  { font-family: var(--sans); font-size: 0.83rem; color: var(--text2); line-height: 1.65; }
-.warn-body code { font-family: var(--mono); font-size: 0.78rem; color: var(--yellow); }
+.sec-card-title { font-family: var(--sans2); font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.sec-card-desc  { font-family: var(--sans2); font-size: 0.82rem; color: var(--text2); line-height: 1.65; }
+.sec-good { border-left: 3px solid var(--green); }
+.sec-warn { border-left: 3px solid var(--yellow); }
 
 /* ── FOOTER ── */
 footer {
   position: relative; z-index: 1;
   border-top: 1px solid var(--border);
-  padding: 2.5rem 3rem;
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  padding: 2.75rem 3.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1.25rem;
 }
-.footer-logo { font-family: var(--sans); font-weight: 700; font-size: 1.05rem; color: var(--cyan); }
-.footer-links { display: flex; gap: 1.5rem; list-style: none; }
-.footer-links a { font-size: 0.72rem; color: var(--text3); text-decoration: none; }
+.footer-logo { font-family: var(--sans); font-weight: 800; font-size: 1.1rem; color: var(--cyan); }
+.footer-links { display: flex; gap: 1.75rem; list-style: none; }
+.footer-links a { font-size: 0.7rem; color: var(--text3); text-decoration: none; transition: color .2s; }
 .footer-links a:hover { color: var(--cyan); }
-.footer-note { font-size: 0.68rem; color: var(--text3); }
+.footer-copy { font-size: 0.67rem; color: var(--text3); }
 
-/* ── ANIMATIONS ── */
-@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-.reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s ease, transform 0.55s ease; }
-.reveal.visible { opacity: 1; transform: translateY(0); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
-/* ── GLOW LINE ── */
-.glow-line {
-  width: 50px; height: 3px; background: var(--cyan);
-  border-radius: 2px; margin-bottom: 1.75rem;
-  box-shadow: 0 0 14px var(--cyan);
-}
-
-/* ── PROVIDER STATUS DEMO ── */
-.status-demo {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 8px; padding: 1.1rem 1.4rem;
-  font-size: 0.75rem; margin-top: 1.5rem;
-}
-.sd-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.35rem 0; }
-.sd-indicator { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.sd-active   { background: var(--green); box-shadow: 0 0 6px var(--green); }
-.sd-ready    { background: var(--cyan); }
-.sd-warn     { background: var(--yellow); }
-.sd-nokey    { background: var(--text3); }
-.sd-arrow { color: var(--yellow); font-size: 0.8rem; }
-.sd-name { color: var(--cyan); min-width: 80px; }
-.sd-status { min-width: 90px; }
-
-@media (max-width: 900px) {
+@media (max-width: 960px) {
+  .hero { flex-direction: column; padding-top: 6rem; gap: 3rem; }
   .providers-grid { grid-template-columns: 1fr 1fr; }
-  .demo-grid { grid-template-columns: 1fr; }
-  .hero { flex-direction: column; padding-top: 5.5rem; gap: 2.5rem; }
-  nav { padding: 0.9rem 1.5rem; }
-  .nav-links { display: none; }
-  .section { padding: 4rem 1.5rem; }
+  .demo-grid-2 { grid-template-columns: 1fr; }
+  .demo-grid-3 { grid-template-columns: 1fr; }
+  .security-grid { grid-template-columns: 1fr; }
+  nav { padding: 0.85rem 1.5rem; }
+  .nav-links li:not(:last-child) { display: none; } .logo-sub { display: none; }
+  .section { padding: 4.5rem 1.5rem; }
 }
-@media (max-width: 600px) {
+@media (max-width: 580px) {
   .providers-grid { grid-template-columns: 1fr; }
-  .hero-stats { gap: 1.5rem; }
+  .hero-stats { gap: 1.75rem; }
+  .ai-tbl-row { grid-template-columns: 1fr; gap: 0.4rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ── NAV ── -->
 <nav>
-  <a href="#" class="nav-logo">JooCLI <span class="nav-version">v3.0</span></a>
+  <a href="#" class="logo-wrap">
+    <div class="logo-cube-wrap">
+      <div class="logo-cube">
+        <div class="cube-face front">J</div>
+        <div class="cube-face back">J</div>
+        <div class="cube-face left">CLI</div>
+        <div class="cube-face right">v5</div>
+        <div class="cube-face top">❯_</div>
+        <div class="cube-face bottom">joo</div>
+      </div>
+    </div>
+    <div class="logo-text-wrap">
+      <span class="logo-name">JooCLI</span>
+      <span class="logo-sub">DevOps Shell</span>
+    </div>
+    <span class="logo-badge">v5.0</span>
+  </a>
   <ul class="nav-links">
-    <li><a href="#ai-providers">AI</a></li>
+    <li><a href="#ai">AI</a></li>
     <li><a href="#install">Install</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#commands">Commands</a></li>
     <li><a href="#demo">Demo</a></li>
+    <li><a href="#plugins">Plugins</a></li>
     <li><a href="#install" class="nav-cta">Get Started</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
+<!-- ── HERO ── -->
 <section class="hero">
   <div class="hero-left">
-    <div class="hero-badge"><span class="badge-dot"></span>v3.0 · Multi-provider AI · Key Validation</div>
-    <h1>Your terminal,<br><span class="ac">supercharged.</span><br><span class="dm">Zero installs.</span></h1>
+    <div class="hero-eyebrow">
+      <div class="eyebrow-pill"><span class="live-dot"></span>v5.0 — Biggest release yet</div>
+      <span class="eyebrow-version">Multi-turn AI · K8s · Plugins · Zero pip installs</span>
+    </div>
+    <h1>
+      <span class="h1-dim">The terminal</span>
+      <span class="h1-wh">shell that</span>
+      <span class="h1-ac">thinks.</span>
+    </h1>
     <p class="hero-desc">
-      JooCLI is a smart interactive shell with multi-provider AI (Claude, ChatGPT, Groq, Gemini),
-      tab autocomplete, Docker inspector, and network diagnostics —
-      built entirely on Python stdlib. No pip required.
+      JooCLI is the DevOps & developer shell with multi-turn AI conversation,
+      native Kubernetes support, plugin system, Docker inspector, and network diagnostics —
+      built entirely on Python stdlib. One file. Zero pip installs.
     </p>
     <div class="hero-actions">
       <a href="#install" class="btn btn-primary">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 0 1 .75.75v6.69l2.22-2.22a.75.75 0 0 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 1 1 1.06-1.06l2.22 2.22V2.75A.75.75 0 0 1 8 2Z"/></svg>
-        Install JooCLI
+        python3 joo_cli_v5.py
       </a>
-      <a href="#demo" class="btn btn-secondary">See Demo →</a>
+      <a href="#demo" class="btn btn-ghost">Live demos →</a>
     </div>
     <div class="hero-stats">
-      <div><div class="stat-num">4</div><span class="stat-lbl">AI Providers</span></div>
-      <div><div class="stat-num">35+</div><span class="stat-lbl">Built-in Docs</span></div>
-      <div><div class="stat-num">15+</div><span class="stat-lbl">Error Patterns</span></div>
-      <div><div class="stat-num">0</div><span class="stat-lbl">Dependencies</span></div>
+      <div class="stat"><div class="stat-num">4</div><span class="stat-lbl">AI Providers</span></div>
+      <div class="stat"><div class="stat-num">50+</div><span class="stat-lbl">Commands</span></div>
+      <div class="stat"><div class="stat-num">0</div><span class="stat-lbl">Dependencies</span></div>
+      <div class="stat"><div class="stat-num">∞</div><span class="stat-lbl">Plugins</span></div>
     </div>
   </div>
 
   <div class="hero-right">
-    <div class="term-window" style="animation: fadeUp 0.5s 0.2s ease both">
-      <div class="term-titlebar">
-        <div class="td r"></div><div class="td y"></div><div class="td g"></div>
-        <span class="term-title">joo_cli.py — v3.0</span>
+    <div class="term-win" style="animation:fadeUp .5s .18s ease both">
+      <div class="term-bar">
+        <div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div>
+        <span class="tb-title">joo_cli_v5.py — v5.0 — AI: Groq · 3 turns</span>
       </div>
       <div class="term-body">
-        <span class="tl tc tbold">  AI: Groq / LLaMA active</span>
-        <span class="tl">&nbsp;</span>
-        <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai status</span></span>
-        <span class="tl">&nbsp;</span>
-        <span class="tl ty tbold">  AI PROVIDERS</span>
-        <span class="tl tdm">  ──────────────────────────────────────</span>
-        <span class="tl">  <span class="ty tbold">►</span> <span class="tc">groq   </span> <span class="tg">✓  active </span>  key=<span class="tdm">gsk_Ks...a6U7</span></span>
-        <span class="tl">    <span class="tc">claude </span> <span class="tdm">⚠  bad key</span> key=<span class="tdm">gsk_Ks...a6U7</span></span>
-        <span class="tl tdm">       ⚠  key looks like a groq key</span>
-        <span class="tl">    <span class="tc">chatgpt</span> <span class="tr">✗  no key </span>  key=<span class="tdm">—</span></span>
-        <span class="tl">    <span class="tc">gemini </span> <span class="tr">✗  no key </span>  key=<span class="tdm">—</span></span>
-        <span class="tl">&nbsp;</span>
-        <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai set claude</span></span>
-        <span class="tl ty">  ⚠  Wrong key. Use: :ai key claude sk-ant-...</span>
-        <span class="tl">&nbsp;</span>
-        <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai key claude sk-ant-api123...</span></span>
-        <span class="tl tg">  Key for 'claude' saved ✓</span>
-        <span class="tl">&nbsp;</span>
-        <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="cursor"></span></span>
+        <span class="tl tc tbold">  JooCLI v5.0 · Multi-turn AI · K8s · Plugins</span>
+        <span class="tl tdm">  AI: Groq/LLaMA · 0 turns in memory</span>
+        <span class="tl"> </span>
+        <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ai why is my pod in CrashLoopBackOff?</span></span>
+        <span class="tl tdm">  ◎ Groq / LLaMA [1 turn] ▸</span>
+        <span class="tl"> </span>
+        <span class="tl tw">  CrashLoopBackOff means the container starts</span>
+        <span class="tl tw">  then exits repeatedly. Check logs first:</span>
+        <span class="tl tc">  kubectl logs &lt;pod&gt; --previous</span>
+        <span class="tl tw">  Common causes: bad env vars, missing secret,</span>
+        <span class="tl tw">  OOMKilled, or entrypoint command failing.</span>
+        <span class="tl"> </span>
+        <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:k8s logs api-pod-7f8d</span></span>
+        <span class="tl tg">  ── K8s logs: api-pod-7f8d (last 50 lines) ──</span>
+        <span class="tl tr">  Error: DATABASE_URL env var not set</span>
+        <span class="tl"> </span>
+        <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ai explain</span></span>
+        <span class="tl tdm">  ◎ Groq / LLaMA [2 turns] ▸</span>
+        <span class="tl"> </span>
+        <span class="tl tw">  The log confirms it — DATABASE_URL is</span>
+        <span class="tl tw">  missing. Create the secret:</span>
+        <span class="tl tc">  kubectl create secret generic db-secret \</span>
+        <span class="tl tc">    --from-literal=DATABASE_URL=postgres://...</span>
+        <span class="tl"> </span>
+        <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="cursor"></span></span>
       </div>
     </div>
   </div>
@@ -580,360 +696,413 @@ footer {
 
 <div class="divider"></div>
 
-<!-- REQUIREMENTS -->
-<section class="section" id="requirements">
+<!-- ── WHAT'S NEW ── -->
+<section class="section" id="whatsnew">
   <div class="reveal">
-    <div class="sec-label">Requirements</div>
-    <h2 class="sec-title">What you need</h2>
-    <p class="sec-sub">Pure Python stdlib. No pip, no virtualenv, no surprises.</p>
+    <span class="sec-kicker">v5.0 Release</span>
+    <h2 class="sec-title">Everything that's new</h2>
+    <p class="sec-sub">A complete rebuild focused on the features DevOps engineers actually need daily.</p>
   </div>
-  <div class="req-grid reveal">
-    <div class="req-card">
-      <div class="req-icon">🐍</div>
-      <div><div class="req-name">Python 3.8+</div><div class="req-detail">Pre-installed on macOS &amp; most Linux</div></div>
-      <div class="req-check">✓</div>
+  <div class="feat-grid">
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-p">🧠</div>
+      <div class="feat-title">Multi-turn AI Conversation</div>
+      <div class="feat-desc">Every <code>:ai</code> question builds on the last. The AI remembers your session context. <code>:ai explain</code> auto-injects the last command output. <code>:ai clear</code> resets history.</div>
+      <div class="feat-tag">:ai explain · :ai clear</div>
     </div>
-    <div class="req-card">
-      <div class="req-icon">📦</div>
-      <div><div class="req-name">Zero pip packages</div><div class="req-detail">readline, subprocess, urllib only</div></div>
-      <div class="req-check">✓</div>
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-o">☸</div>
+      <div class="feat-title">Kubernetes Native</div>
+      <div class="feat-desc">Full <code>:k8s</code> namespace: pods, logs, exec, describe, top, contexts, namespaces. Fuzzy pod name matching. Color-coded pod status (Running/Error/Pending).</div>
+      <div class="feat-tag">:k8s pods · logs · exec · describe · top</div>
     </div>
-    <div class="req-card">
-      <div class="req-icon">🐳</div>
-      <div><div class="req-name">Docker (optional)</div><div class="req-detail">For :docker inspector features</div></div>
-      <div class="req-check">✓</div>
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-g">🔌</div>
+      <div class="feat-title">Plugin System</div>
+      <div class="feat-desc">Drop any <code>.py</code> file in <code>~/.joocli/plugins/</code> and it loads automatically. Plugins register commands, handle args, and return output. Community-extensible.</div>
+      <div class="feat-tag">~/.joocli/plugins/*.py</div>
     </div>
-    <div class="req-card">
-      <div class="req-icon">🤖</div>
-      <div><div class="req-name">Any AI API key</div><div class="req-detail">Claude, ChatGPT, Groq or Gemini</div></div>
-      <div class="req-check">✓</div>
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-r">🔒</div>
+      <div class="feat-title">Secure Key Storage</div>
+      <div class="feat-desc">API keys are obfuscated with a machine-specific fingerprint before being saved. Tries OS keyring first. File permissions set to 600 automatically.</div>
+      <div class="feat-tag">:ai key &lt;provider&gt; &lt;key&gt;</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-y">📋</div>
+      <div class="feat-title">Snippet System</div>
+      <div class="feat-desc">Save any command sequence as a named snippet and replay it instantly. Tab-completion on snippet names. Fuzzy match on typos.</div>
+      <div class="feat-tag">:snippet save deploy "cmd" · :run deploy</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-c">👁</div>
+      <div class="feat-title">:watch Mode</div>
+      <div class="feat-desc">Re-run any command every N seconds. Changed lines are highlighted in green. Works with <code>:watch docker</code>, <code>:watch ports</code>, or any shell command.</div>
+      <div class="feat-tag">:watch docker 3 · :watch "kubectl get pods"</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-b">🛡</div>
+      <div class="feat-title">Destructive Command Guard</div>
+      <div class="feat-desc">Detects <code>rm -rf</code>, <code>docker rm -f</code>, <code>DROP TABLE</code>, <code>dd if=</code> and 8 other patterns. Requires typing <code>yes</code> to confirm. Prevents accidents.</div>
+      <div class="feat-tag">Automatic · no config</div>
+    </div>
+    <div class="feat-card reveal">
+      <span class="feat-new-badge">NEW</span>
+      <div class="feat-ico fi-c">🔬</div>
+      <div class="feat-title">DevTools Suite</div>
+      <div class="feat-desc"><code>:ssl</code> inspects TLS certs with expiry countdown. <code>:jwt</code> decodes tokens. <code>:b64</code> / <code>:hash</code> / <code>:url</code> for quick encoding. <code>:bench</code> runs CPU + disk benchmarks.</div>
+      <div class="feat-tag">:ssl · :jwt · :b64 · :hash · :bench</div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- AI PROVIDERS -->
-<section class="section" id="ai-providers">
+<!-- ── AI PROVIDERS ── -->
+<section class="section" id="ai">
   <div class="reveal">
-    <div class="sec-label">New in v3.0</div>
-    <h2 class="sec-title">Multi-provider AI</h2>
-    <p class="sec-sub">Use whichever AI you have a key for. Switch at runtime, no restarts. Keys are validated by prefix to prevent mistakes.</p>
+    <span class="sec-kicker">AI Engine</span>
+    <h2 class="sec-title">4 providers. One conversation.</h2>
+    <p class="sec-sub">Use any provider you have a key for. Switch at runtime. Keys validated by prefix. Multi-turn context maintained across all providers.</p>
   </div>
-
   <div class="providers-grid reveal">
-    <div class="provider-card pc-claude">
-      <div class="prov-logo pl-claude">🧠</div>
-      <div>
-        <div class="prov-name">Claude</div>
-        <div class="prov-model">claude-sonnet-4-20250514</div>
-      </div>
-      <div class="prov-key-prefix">sk-ant-...</div>
+    <div class="prov-card pc-c">
+      <div class="prov-icon pi-c">🧠</div>
+      <div><div class="prov-name">Claude</div><div class="prov-model">claude-sonnet-4-20250514</div></div>
+      <div class="prov-prefix">sk-ant-...</div>
     </div>
-    <div class="provider-card pc-openai">
-      <div class="prov-logo pl-openai">✦</div>
-      <div>
-        <div class="prov-name">ChatGPT</div>
-        <div class="prov-model">gpt-4o</div>
-      </div>
-      <div class="prov-key-prefix">sk-...</div>
+    <div class="prov-card pc-o">
+      <div class="prov-icon pi-o">✦</div>
+      <div><div class="prov-name">ChatGPT</div><div class="prov-model">gpt-4o</div></div>
+      <div class="prov-prefix">sk-...</div>
     </div>
-    <div class="provider-card pc-groq">
-      <div class="prov-logo pl-groq">⚡</div>
-      <div>
-        <div class="prov-name">Groq / LLaMA</div>
-        <div class="prov-model">llama-3.3-70b-versatile</div>
-      </div>
-      <div class="prov-key-prefix">gsk_...</div>
+    <div class="prov-card pc-g">
+      <div class="prov-icon pi-g">⚡</div>
+      <div><div class="prov-name">Groq / LLaMA</div><div class="prov-model">llama-3.3-70b-versatile</div></div>
+      <div class="prov-prefix">gsk_...</div>
     </div>
-    <div class="provider-card pc-gemini">
-      <div class="prov-logo pl-gemini">◈</div>
-      <div>
-        <div class="prov-name">Gemini</div>
-        <div class="prov-model">gemini-1.5-flash</div>
-      </div>
-      <div class="prov-key-prefix">AIza...</div>
+    <div class="prov-card pc-m">
+      <div class="prov-icon pi-m">◈</div>
+      <div><div class="prov-name">Gemini</div><div class="prov-model">gemini-2.0-flash</div></div>
+      <div class="prov-prefix">AIza...</div>
     </div>
   </div>
 
-  <div class="ai-commands reveal">
-    <div class="ai-cmd-row" style="background:var(--bg3)">
-      <span class="ai-cmd-name" style="color:var(--text3);font-size:0.65rem;letter-spacing:.1em;text-transform:uppercase">COMMAND</span>
-      <span class="ai-cmd-desc" style="color:var(--text3);font-size:0.65rem;letter-spacing:.1em;text-transform:uppercase">DESCRIPTION</span>
-      <span></span>
+  <div class="ai-tbl reveal">
+    <div class="ai-tbl-row header">
+      <span class="atr-hdr">COMMAND</span>
+      <span class="atr-hdr">DESCRIPTION</span>
+      <span class="atr-hdr">TAG</span>
     </div>
-    <div class="ai-cmd-row">
-      <span class="ai-cmd-name">:ai &lt;question&gt;</span>
-      <span class="ai-cmd-desc">Ask a question using the active provider. Last error auto-included as context</span>
-      <span class="ai-cmd-tag tag-ai">AI</span>
+    <div class="ai-tbl-row">
+      <span class="atr-cmd">:ai &lt;question&gt;</span>
+      <span class="atr-desc">Ask a question. Context from previous turns included automatically</span>
+      <span class="badge-ai">AI</span>
     </div>
-    <div class="ai-cmd-row">
-      <span class="ai-cmd-name">:ai status</span>
-      <span class="ai-cmd-desc">Show all providers, key status, active provider indicator, and expected key prefixes</span>
-      <span class="ai-cmd-tag tag-ai">AI</span>
+    <div class="ai-tbl-row">
+      <span class="atr-cmd">:ai explain</span>
+      <span class="atr-desc">AI analyses the last command's stdout/stderr output with no extra typing</span>
+      <span class="badge-new">NEW</span>
     </div>
-    <div class="ai-cmd-row">
-      <span class="ai-cmd-name">:ai set &lt;provider&gt;</span>
-      <span class="ai-cmd-desc">Switch active provider (claude / chatgpt / groq / gemini). Validates key on switch</span>
-      <span class="ai-cmd-tag tag-ai">AI</span>
+    <div class="ai-tbl-row">
+      <span class="atr-cmd">:ai clear</span>
+      <span class="atr-desc">Reset conversation history. Start a fresh context for a new topic</span>
+      <span class="badge-new">NEW</span>
     </div>
-    <div class="ai-cmd-row">
-      <span class="ai-cmd-name">:ai key &lt;provider&gt; &lt;key&gt;</span>
-      <span class="ai-cmd-desc">Save an API key. Validates key prefix before saving. Stored in ~/.joocli_config.json</span>
-      <span class="ai-cmd-tag tag-ai">AI</span>
+    <div class="ai-tbl-row">
+      <span class="atr-cmd">:ai status</span>
+      <span class="atr-desc">All 4 providers with key validity, active indicator, turn counter</span>
+      <span class="badge-ai">AI</span>
+    </div>
+    <div class="ai-tbl-row">
+      <span class="atr-cmd">:ai set &lt;provider&gt;</span>
+      <span class="atr-desc">Switch providers at runtime. Validates key on switch</span>
+      <span class="badge-ai">AI</span>
+    </div>
+    <div class="ai-tbl-row">
+      <span class="atr-cmd">:ai key &lt;p&gt; &lt;key&gt;</span>
+      <span class="atr-desc">Save API key. Encrypted with machine fingerprint. Stored at ~/.joocli/config.json</span>
+      <span class="badge-v5">v5.0</span>
     </div>
   </div>
 
-  <!-- Status Demo -->
+  <!-- AI Status Demo -->
   <div class="status-demo reveal">
-    <div style="font-size:0.65rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.75rem">Live :ai status example</div>
+    <div class="sd-head">:ai status — live example</div>
     <div class="sd-row">
-      <span class="sd-arrow">►</span>
-      <span class="sd-indicator sd-active"></span>
-      <span class="sd-name tc" style="color:var(--cyan)">groq</span>
-      <span class="sd-status tg" style="color:var(--green)">✓  active</span>
-      <span style="color:var(--text3);font-size:0.72rem">key=gsk_Ks...a6U7  (Groq / LLaMA)</span>
-    </div>
-    <div class="sd-row">
-      <span style="width:1rem"></span>
-      <span class="sd-indicator sd-warn"></span>
-      <span class="sd-name tc" style="color:var(--cyan)">claude</span>
-      <span class="sd-status ty" style="color:var(--yellow)">⚠  bad key</span>
-      <span style="color:var(--text3);font-size:0.72rem">key looks like a groq key (prefix 'gsk_...')</span>
+      <span style="color:var(--yellow);font-size:.9rem">►</span>
+      <span class="sd-dot sd-active"></span>
+      <span class="sd-name">groq</span>
+      <span style="color:var(--green);min-width:100px">✓&nbsp; active</span>
+      <span style="color:var(--text3)">key=gsk_Ks...a6U7 &nbsp;·&nbsp; Groq / LLaMA &nbsp;·&nbsp; 4 turns in session</span>
     </div>
     <div class="sd-row">
-      <span style="width:1rem"></span>
-      <span class="sd-indicator sd-nokey"></span>
-      <span class="sd-name tc" style="color:var(--cyan)">chatgpt</span>
-      <span class="sd-status tr" style="color:var(--red)">✗  no key</span>
-      <span style="color:var(--text3);font-size:0.72rem">key=—</span>
+      <span style="width:1.1rem"></span>
+      <span class="sd-dot sd-ready"></span>
+      <span class="sd-name">claude</span>
+      <span style="color:var(--cyan);min-width:100px">✓&nbsp; ready</span>
+      <span style="color:var(--text3)">key=sk-ant-...f9Kp &nbsp;·&nbsp; Claude (Anthropic)</span>
     </div>
     <div class="sd-row">
-      <span style="width:1rem"></span>
-      <span class="sd-indicator sd-nokey"></span>
-      <span class="sd-name tc" style="color:var(--cyan)">gemini</span>
-      <span class="sd-status tr" style="color:var(--red)">✗  no key</span>
-      <span style="color:var(--text3);font-size:0.72rem">key=—</span>
+      <span style="width:1.1rem"></span>
+      <span class="sd-dot sd-nokey"></span>
+      <span class="sd-name">chatgpt</span>
+      <span style="color:var(--text3);min-width:100px">✗&nbsp; no key</span>
+      <span style="color:var(--text3)">key=—</span>
     </div>
-    <div style="margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--border);font-size:0.68rem;color:var(--text3)">
-      Expected prefixes: &nbsp; claude=<span style="color:var(--yellow)">sk-ant-</span> &nbsp; chatgpt=<span style="color:var(--yellow)">sk-</span> &nbsp; groq=<span style="color:var(--yellow)">gsk_</span> &nbsp; gemini=<span style="color:var(--yellow)">AI...</span>
+    <div class="sd-row">
+      <span style="width:1.1rem"></span>
+      <span class="sd-dot sd-nokey"></span>
+      <span class="sd-name">gemini</span>
+      <span style="color:var(--text3);min-width:100px">✗&nbsp; no key</span>
+      <span style="color:var(--text3)">key=—</span>
     </div>
-  </div>
-
-  <div class="warn-box reveal">
-    <div class="warn-icon">⚠️</div>
-    <div>
-      <div class="warn-title">WSL / VPN Users: Cloudflare 403 Error</div>
-      <div class="warn-body">
-        Groq API uses Cloudflare which may block requests from WSL or VPS IPs (error code 1010).
-        JooCLI v3.0 sends a browser-like <code>User-Agent</code> header to avoid this in most cases.
-        If you still see a 403, try: <code>:ai set claude</code> or run from a native Windows terminal,
-        or use a VPN.
-      </div>
+    <div class="sd-footer">
+      Conversation turns in session: <span style="color:var(--cyan)">4</span> &nbsp;·&nbsp;
+      :ai clear to reset &nbsp;·&nbsp;
+      Expected prefixes: claude=<span style="color:var(--yellow)">sk-ant-</span> &nbsp;
+      chatgpt=<span style="color:var(--yellow)">sk-</span> &nbsp;
+      groq=<span style="color:var(--yellow)">gsk_</span> &nbsp;
+      gemini=<span style="color:var(--yellow)">AIza</span>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- INSTALL -->
+<!-- ── INSTALL ── -->
 <section class="section" id="install">
   <div class="reveal">
-    <div class="sec-label">Installation</div>
-    <h2 class="sec-title">Up and running in 30 seconds</h2>
-    <p class="sec-sub">One file. One command. Pick your platform.</p>
+    <span class="sec-kicker">Installation</span>
+    <h2 class="sec-title">Running in 30 seconds</h2>
+    <p class="sec-sub">One Python file. No virtual environments. No package managers. Pick your platform.</p>
   </div>
 
-  <div class="install-wrap reveal">
-    <div class="install-tabs">
-      <button class="tab-btn active" data-tab="linux">Linux / WSL</button>
-      <button class="tab-btn" data-tab="mac">macOS</button>
-      <button class="tab-btn" data-tab="windows">Windows</button>
-      <button class="tab-btn" data-tab="ai">Enable AI</button>
-      <button class="tab-btn" data-tab="multi-ai">Multi-AI Setup</button>
+  <div class="install-box reveal">
+    <div class="itabs">
+      <button class="itab on" data-tab="linux">Linux / WSL</button>
+      <button class="itab" data-tab="mac">macOS</button>
+      <button class="itab" data-tab="win">Windows</button>
+      <button class="itab" data-tab="ai-key">Enable AI</button>
+      <button class="itab" data-tab="k8s">Kubernetes</button>
+      <button class="itab" data-tab="plugins-tab">Plugins</button>
     </div>
 
-    <!-- Linux / WSL -->
-    <div class="tab-panel active" id="tab-linux">
-      <div class="install-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Download joo_cli.py</div>
-          <div class="code-block">
-            <pre><span class="kw">wget</span> https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli.py</pre>
-            <button class="copy-btn" data-copy="wget https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli.py">copy</button>
+    <!-- LINUX -->
+    <div class="ipanel on" id="itab-linux">
+      <div class="istep">
+        <div class="inum">1</div>
+        <div class="ibody">
+          <div class="ititle">Download joo_cli_v5.py</div>
+          <div class="icode">
+            <pre><span class="kw">wget</span> https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli_v5.py</pre>
+            <button class="cpybtn" data-copy="wget https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli_v5.py">copy</button>
           </div>
         </div>
       </div>
-      <div class="install-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Fix line endings (WSL only)</div>
-          <div class="code-block">
-            <pre><span class="kw">sed</span> <span class="fl">-i</span> <span class="st">'s/\r//'</span> joo_cli.py</pre>
-            <button class="copy-btn" data-copy="sed -i 's/\r//' joo_cli.py">copy</button>
+      <div class="istep">
+        <div class="inum">2</div>
+        <div class="ibody">
+          <div class="ititle">Fix CRLF line endings (WSL only)</div>
+          <div class="icode">
+            <pre><span class="kw">sed</span> <span class="fl">-i</span> <span class="st">'s/\r//'</span> joo_cli_v5.py</pre>
+            <button class="cpybtn" data-copy="sed -i 's/\r//' joo_cli_v5.py">copy</button>
           </div>
-          <div class="step-note">Only needed if you downloaded on Windows first.</div>
+          <div class="inote">Only needed if downloaded on Windows first.</div>
         </div>
       </div>
-      <div class="install-step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">Make it a global command</div>
-          <div class="code-block">
-            <pre><span class="kw">chmod</span> +x joo_cli.py
-<span class="kw">sudo</span> cp joo_cli.py /usr/local/bin/joo
-<span class="kw">joo</span>   <span class="cm"># launch!</span></pre>
-            <button class="copy-btn" data-copy="chmod +x joo_cli.py && sudo cp joo_cli.py /usr/local/bin/joo">copy</button>
+      <div class="istep">
+        <div class="inum">3</div>
+        <div class="ibody">
+          <div class="ititle">Make global and launch</div>
+          <div class="icode">
+            <pre><span class="kw">chmod</span> +x joo_cli_v5.py
+<span class="kw">sudo</span> cp joo_cli_v5.py /usr/local/bin/joo
+<span class="kw">joo</span></pre>
+            <button class="cpybtn" data-copy="chmod +x joo_cli_v5.py && sudo cp joo_cli_v5.py /usr/local/bin/joo && joo">copy</button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- macOS -->
-    <div class="tab-panel" id="tab-mac">
-      <div class="install-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Download via curl</div>
-          <div class="code-block">
-            <pre><span class="kw">curl</span> <span class="fl">-O</span>  https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli.py</pre>
-            <button class="copy-btn" data-copy="curl -O https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli.py">copy</button>
-          </div>
-        </div>
-      </div>
-      <div class="install-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Install as global command</div>
-          <div class="code-block">
-            <pre><span class="kw">chmod</span> +x joo_cli.py
-<span class="kw">sudo</span> cp joo_cli.py /usr/local/bin/joo</pre>
-            <button class="copy-btn" data-copy="chmod +x joo_cli.py && sudo cp joo_cli.py /usr/local/bin/joo">copy</button>
-          </div>
-        </div>
-      </div>
-      <div class="install-step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">Launch!</div>
-          <div class="code-block">
-            <pre><span class="kw">joo</span></pre>
-            <button class="copy-btn" data-copy="joo">copy</button>
-          </div>
-          <div class="step-note">macOS ships Python 3 pre-installed. No extra setup needed.</div>
         </div>
       </div>
     </div>
 
-    <!-- Windows -->
-    <div class="tab-panel" id="tab-windows">
-      <div class="install-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Install WSL2 (recommended)</div>
-          <div class="code-block">
+    <!-- MACOS -->
+    <div class="ipanel" id="itab-mac">
+      <div class="istep">
+        <div class="inum">1</div>
+        <div class="ibody">
+          <div class="ititle">Download via curl</div>
+          <div class="icode">
+            <pre><span class="kw">curl</span> <span class="fl">-O</span> https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli_v5.py</pre>
+            <button class="cpybtn" data-copy="curl -O https://raw.githubusercontent.com/Yousefa7medmaher/joocli/master/joo_cli_v5.py">copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="istep">
+        <div class="inum">2</div>
+        <div class="ibody">
+          <div class="ititle">Install globally</div>
+          <div class="icode">
+            <pre><span class="kw">chmod</span> +x joo_cli_v5.py && <span class="kw">sudo</span> cp joo_cli_v5.py /usr/local/bin/joo</pre>
+            <button class="cpybtn" data-copy="chmod +x joo_cli_v5.py && sudo cp joo_cli_v5.py /usr/local/bin/joo">copy</button>
+          </div>
+          <div class="inote">macOS ships Python 3 pre-installed. No extra setup needed.</div>
+        </div>
+      </div>
+      <div class="istep">
+        <div class="inum">3</div>
+        <div class="ibody">
+          <div class="ititle">Launch</div>
+          <div class="icode"><pre><span class="kw">joo</span></pre><button class="cpybtn" data-copy="joo">copy</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WINDOWS -->
+    <div class="ipanel" id="itab-win">
+      <div class="istep">
+        <div class="inum">1</div>
+        <div class="ibody">
+          <div class="ititle">Install WSL2 (recommended)</div>
+          <div class="icode">
             <pre><span class="cm"># In PowerShell as Administrator:</span>
 <span class="kw">wsl</span> --install</pre>
-            <button class="copy-btn" data-copy="wsl --install">copy</button>
+            <button class="cpybtn" data-copy="wsl --install">copy</button>
           </div>
-          <div class="step-note">Then open Ubuntu and follow the Linux steps above.</div>
+          <div class="inote">Then open Ubuntu and follow the Linux steps.</div>
         </div>
       </div>
-      <div class="install-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Native Python (without WSL)</div>
-          <div class="code-block">
-            <pre><span class="cm"># Download Python from python.org, then:</span>
-<span class="kw">python</span> joo_cli.py</pre>
-            <button class="copy-btn" data-copy="python joo_cli.py">copy</button>
+      <div class="istep">
+        <div class="inum">2</div>
+        <div class="ibody">
+          <div class="ititle">Native Python (no WSL)</div>
+          <div class="icode">
+            <pre><span class="cm"># After installing Python from python.org:</span>
+<span class="kw">python</span> joo_cli_v5.py</pre>
+            <button class="cpybtn" data-copy="python joo_cli_v5.py">copy</button>
           </div>
-          <div class="step-note">⚡ Running natively on Windows avoids Cloudflare blocks that affect WSL IPs.</div>
+          <div class="inote">⚡ Native Windows avoids Cloudflare blocks that affect some WSL IPs.</div>
         </div>
       </div>
     </div>
 
-    <!-- AI (single key) -->
-    <div class="tab-panel" id="tab-ai">
-      <div class="install-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Get an API key (choose one)</div>
-          <div class="step-note">
-            • <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — Claude (sk-ant-...)<br>
-            • <a href="https://platform.openai.com" target="_blank">platform.openai.com</a> — ChatGPT (sk-...)<br>
-            • <a href="https://console.groq.com" target="_blank">console.groq.com</a> — Groq free tier (gsk_...)<br>
-            • <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> — Gemini (AIza...)
+    <!-- AI KEY -->
+    <div class="ipanel" id="itab-ai-key">
+      <div class="istep">
+        <div class="inum">1</div>
+        <div class="ibody">
+          <div class="ititle">Get a free API key</div>
+          <div class="inote" style="font-size:.78rem;line-height:2">
+            • <a href="https://console.groq.com" target="_blank">console.groq.com</a> — Groq (free tier, fastest) → key starts <span style="color:var(--yellow)">gsk_</span><br>
+            • <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — Claude → key starts <span style="color:var(--yellow)">sk-ant-</span><br>
+            • <a href="https://platform.openai.com" target="_blank">platform.openai.com</a> — ChatGPT → key starts <span style="color:var(--yellow)">sk-</span><br>
+            • <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> — Gemini (free) → key starts <span style="color:var(--yellow)">AIza</span>
           </div>
         </div>
       </div>
-      <div class="install-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Set via environment variable</div>
-          <div class="code-block">
-            <pre><span class="cm"># Add to ~/.bashrc or ~/.zshrc</span>
-<span class="kw">export</span> GROQ_API_KEY=<span class="st">"gsk_your-key-here"</span>
-<span class="cm"># or for Claude:</span>
-<span class="kw">export</span> ANTHROPIC_API_KEY=<span class="st">"sk-ant-your-key-here"</span></pre>
-            <button class="copy-btn" data-copy="export GROQ_API_KEY='gsk_your-key-here'">copy</button>
-          </div>
-        </div>
-      </div>
-      <div class="install-step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">Or save key inside JooCLI</div>
-          <div class="code-block">
+      <div class="istep">
+        <div class="inum">2</div>
+        <div class="ibody">
+          <div class="ititle">Save key inside JooCLI (encrypted)</div>
+          <div class="icode">
             <pre><span class="cm">joo ❯</span> :ai key groq gsk_your-key-here
-<span class="tg">  Key for 'groq' saved ✓</span></pre>
-            <button class="copy-btn" data-copy=":ai key groq gsk_your-key-here">copy</button>
+<span class="ok">  Key for 'groq' saved ✓</span></pre>
+            <button class="cpybtn" data-copy=":ai key groq gsk_your-key-here">copy</button>
           </div>
-          <div class="step-note">Keys saved with <code>:ai key</code> are stored in <code>~/.joocli_config.json</code></div>
+          <div class="inote">Key is obfuscated with machine fingerprint before saving. chmod 600 applied automatically.</div>
+        </div>
+      </div>
+      <div class="istep">
+        <div class="inum">3</div>
+        <div class="ibody">
+          <div class="ititle">Or use environment variable</div>
+          <div class="icode">
+            <pre><span class="kw">export</span> GROQ_API_KEY=<span class="st">"gsk_your-key-here"</span>
+<span class="cm"># Add to ~/.bashrc or ~/.zshrc for persistence</span></pre>
+            <button class="cpybtn" data-copy="export GROQ_API_KEY='gsk_your-key-here'">copy</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Multi-AI Setup -->
-    <div class="tab-panel" id="tab-multi-ai">
-      <div class="install-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Check provider status</div>
-          <div class="code-block">
-            <pre><span class="cm">joo ❯</span> :ai status</pre>
-            <button class="copy-btn" data-copy=":ai status">copy</button>
+    <!-- KUBERNETES -->
+    <div class="ipanel" id="itab-k8s">
+      <div class="istep">
+        <div class="inum">1</div>
+        <div class="ibody">
+          <div class="ititle">Ensure kubectl is configured</div>
+          <div class="icode">
+            <pre><span class="cm">joo ❯</span> :k8s ctx           <span class="cm"># list contexts</span>
+<span class="cm">joo ❯</span> :k8s ctx prod      <span class="cm"># switch to prod context</span>
+<span class="cm">joo ❯</span> :k8s ns monitoring <span class="cm"># set default namespace</span></pre>
+            <button class="cpybtn" data-copy=":k8s ctx">copy</button>
           </div>
-          <div class="step-note">Shows all 4 providers, key validity, and which is active.</div>
         </div>
       </div>
-      <div class="install-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Add keys for each provider</div>
-          <div class="code-block">
-            <pre><span class="cm">joo ❯</span> :ai key claude   sk-ant-api123...
-<span class="cm">joo ❯</span> :ai key chatgpt  sk-proj-abc...
-<span class="cm">joo ❯</span> :ai key groq     gsk_xyz...
-<span class="cm">joo ❯</span> :ai key gemini   AIzaSy...</pre>
-            <button class="copy-btn" data-copy=":ai key groq gsk_your-key">copy</button>
+      <div class="istep">
+        <div class="inum">2</div>
+        <div class="ibody">
+          <div class="ititle">Explore your cluster</div>
+          <div class="icode">
+            <pre><span class="cm">joo ❯</span> :k8s pods          <span class="cm"># colour-coded pod status</span>
+<span class="cm">joo ❯</span> :k8s top           <span class="cm"># resource usage</span>
+<span class="cm">joo ❯</span> :k8s logs api-pod  <span class="cm"># fuzzy name match</span>
+<span class="cm">joo ❯</span> :k8s exec api-pod  <span class="cm"># exec into pod</span></pre>
+            <button class="cpybtn" data-copy=":k8s pods">copy</button>
           </div>
-          <div class="step-note">Keys are validated by prefix — wrong provider = rejected with a clear message.</div>
         </div>
       </div>
-      <div class="install-step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">Switch providers on the fly</div>
-          <div class="code-block">
-            <pre><span class="cm">joo ❯</span> :ai set claude
-<span class="tg">  Switched to Claude (Anthropic) ✓</span>
-<span class="cm">joo ❯</span> :ai set groq
-<span class="tg">  Switched to Groq / LLaMA ✓</span></pre>
-            <button class="copy-btn" data-copy=":ai set claude">copy</button>
+      <div class="istep">
+        <div class="inum">3</div>
+        <div class="ibody">
+          <div class="ititle">AI-assisted debugging</div>
+          <div class="icode">
+            <pre><span class="cm">joo ❯</span> :k8s logs crashy-pod-xyz
+<span class="cm">  Error: DATABASE_URL not set</span>
+<span class="cm">joo ❯</span> :ai explain
+<span class="ok">  DATABASE_URL is missing. Add it as a K8s secret...</span></pre>
+            <button class="cpybtn" data-copy=":ai explain">copy</button>
           </div>
-          <div class="step-note">Active provider persists across sessions via <code>~/.joocli_config.json</code></div>
+          <div class="inote">:ai explain automatically injects the last pod log output as context.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLUGINS -->
+    <div class="ipanel" id="itab-plugins-tab">
+      <div class="istep">
+        <div class="inum">1</div>
+        <div class="ibody">
+          <div class="ititle">Create a plugin file</div>
+          <div class="icode">
+            <pre><span class="cm"># ~/.joocli/plugins/mytools.py</span>
+<span class="kw">COMMANDS</span> = [<span class="st">"sysinfo"</span>]
+<span class="kw">DESCRIPTION</span> = <span class="st">"System info reporter"</span>
+
+<span class="fl">def</span> handle(args: str) -> str:
+    <span class="fl">import</span> subprocess
+    <span class="fl">return</span> subprocess.getoutput(<span class="st">"uname -a"</span>)</pre>
+            <button class="cpybtn" data-copy="# ~/.joocli/plugins/mytools.py">copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="istep">
+        <div class="inum">2</div>
+        <div class="ibody">
+          <div class="ititle">Plugin loads automatically</div>
+          <div class="icode">
+            <pre><span class="cm">joo ❯</span> :plugins           <span class="cm"># list all loaded plugins</span>
+<span class="ok">  sysinfo   System info reporter</span>
+<span class="cm">joo ❯</span> :sysinfo           <span class="cm"># your new command!</span></pre>
+            <button class="cpybtn" data-copy=":plugins">copy</button>
+          </div>
+          <div class="inote">No restart needed if you add a plugin while joo is running — just open a new session.</div>
         </div>
       </div>
     </div>
@@ -942,98 +1111,268 @@ footer {
 
 <div class="divider"></div>
 
-<!-- FEATURES -->
-<section class="section" id="features">
+<!-- ── DEMO ── -->
+<section class="section" id="demo">
   <div class="reveal">
-    <div class="sec-label">Features</div>
-    <h2 class="sec-title">Everything you need</h2>
-    <p class="sec-sub">Built for developers who live in the terminal.</p>
+    <span class="sec-kicker">Live Demos</span>
+    <h2 class="sec-title">See v5.0 in action</h2>
+    <p class="sec-sub">Real workflows from DevOps engineers using JooCLI v5.0 every day.</p>
   </div>
 
-  <div class="features-grid">
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-p">🤖</div>
-      <div class="feat-title">Multi-Provider AI</div>
-      <div class="feat-desc">Claude, ChatGPT, Groq, and Gemini. Switch providers at runtime. Keys validated by prefix to prevent wrong-provider mistakes.</div>
-      <div class="feat-cmd">:ai set &lt;provider&gt; · :ai status</div>
+  <!-- Row 1: Multi-turn AI + K8s -->
+  <div class="demo-grid-2">
+    <div class="reveal">
+      <div class="demo-header">
+        <div class="demo-lbl">Multi-turn AI conversation</div>
+        <div class="demo-badge-new">NEW v5</div>
+      </div>
+      <div class="term-win">
+        <div class="term-bar"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div><span class="tb-title">:ai — multi-turn context</span></div>
+        <div class="term-body" style="font-size:.72rem">
+          <span class="tl tdm">  AI: Groq · 0 turns in memory</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ai how do I debug a memory leak in Python?</span></span>
+          <span class="tl tdm">  ◎ Groq [1 turn] ▸</span>
+          <span class="tl tw">  Use tracemalloc to track allocations:</span>
+          <span class="tl tc">  import tracemalloc; tracemalloc.start()</span>
+          <span class="tl tw">  Also try memory_profiler or objgraph.</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ai show me a working example</span></span>
+          <span class="tl tdm">  ◎ Groq [2 turns] ▸</span>
+          <span class="tl tw">  Building on the tracemalloc approach:</span>
+          <span class="tl tc">  tracemalloc.start()</span>
+          <span class="tl tc">  # ... your code ...</span>
+          <span class="tl tc">  snap = tracemalloc.take_snapshot()</span>
+          <span class="tl tc">  top = snap.statistics('lineno')[:5]</span>
+          <span class="tl tw">  This shows the top 5 memory consumers.</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ai clear</span></span>
+          <span class="tl tg">  Conversation history cleared ✓</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-c">⌨</div>
-      <div class="feat-title">Tab Autocomplete</div>
-      <div class="feat-desc">Autocompletes command names, flags, and file paths. Knows 35+ commands and every executable in your $PATH.</div>
-      <div class="feat-cmd">Tab → complete</div>
+
+    <div class="reveal">
+      <div class="demo-header">
+        <div class="demo-lbl">Kubernetes workflow</div>
+        <div class="demo-badge-new">NEW v5</div>
+      </div>
+      <div class="term-win">
+        <div class="term-bar"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div><span class="tb-title">:k8s — native K8s tools</span></div>
+        <div class="term-body" style="font-size:.72rem">
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:k8s pods production</span></span>
+          <span class="tl ty tbold">  ▸ PODS ns=production</span>
+          <span class="tl tdm">  NAME                     STATUS   RESTARTS</span>
+          <span class="tl tg">  api-pod-7f8d9c-xk2p      Running  0</span>
+          <span class="tl tg">  worker-5b4c8d-m9qr       Running  0</span>
+          <span class="tl tr">  db-sync-6c7f-p3wn        Error    14</span>
+          <span class="tl ty">  cache-9d2a-r7ks          Pending  0</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:k8s logs db-sync-6c7f-p3wn</span></span>
+          <span class="tl tg">  ── K8s logs: db-sync-6c7f-p3wn ──</span>
+          <span class="tl tr">  FATAL: Connection refused to postgres:5432</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ai explain</span></span>
+          <span class="tl tdm">  ◎ Groq [1 turn] ▸</span>
+          <span class="tl tw">  postgres service isn't reachable. Check:</span>
+          <span class="tl tc">  :k8s describe service postgres</span>
+          <span class="tl tc">  :k8s get pods -l app=postgres</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-b">🐳</div>
-      <div class="feat-title">Docker Inspector</div>
-      <div class="feat-desc">Full container report with status, ports, IPs, images, networks, and volumes. Inspect, exec, and manage containers.</div>
-      <div class="feat-cmd">:docker · :docker inspect &lt;n&gt;</div>
+  </div>
+
+  <!-- Row 2: Three smaller demos -->
+  <div class="demo-grid-3">
+    <div class="reveal">
+      <div class="demo-header">
+        <div class="demo-lbl">Watch mode</div>
+        <div class="demo-badge-new">NEW</div>
+      </div>
+      <div class="term-win">
+        <div class="term-bar"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div><span class="tb-title">:watch</span></div>
+        <div class="term-body" style="font-size:.7rem">
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:watch docker 3</span></span>
+          <span class="tl tc">  Watching: docker ps -a  (3s)</span>
+          <span class="tl"> </span>
+          <span class="tl tdm">  [JooCLI :watch]  14:23:01</span>
+          <span class="tl"> </span>
+          <span class="tl tg">  myapp    Up 2 hours   :8080</span>
+          <span class="tl tg">  redis    Up 5 days    :6379</span>
+          <span class="tl tg">  nginx    Up 1 day     :443</span>
+          <span class="tl"> </span>
+          <span class="tl tdm">  [JooCLI :watch]  14:23:04</span>
+          <span class="tl"> </span>
+          <span class="tl tg">  myapp    Up 2 hours   :8080</span>
+          <span class="tl tg">  redis    Up 5 days    :6379</span>
+          <span class="tl tg">  <span style="background:rgba(0,230,118,.12)">worker   Up 3 seconds :—  </span></span>
+          <span class="tl tdm">  ^C  :watch stopped</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-g">🌐</div>
-      <div class="feat-title">Network Tools</div>
-      <div class="feat-desc">See all network interfaces, IP addresses, routing table, DNS servers, and listening ports in one command.</div>
-      <div class="feat-cmd">:net · :ports</div>
+
+    <div class="reveal">
+      <div class="demo-header">
+        <div class="demo-lbl">Snippet + Destructive guard</div>
+        <div class="demo-badge-new">NEW</div>
+      </div>
+      <div class="term-win">
+        <div class="term-bar"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div><span class="tb-title">:snippet · guard</span></div>
+        <div class="term-body" style="font-size:.7rem">
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:snippet save deploy "docker compose pull && docker compose up -d"</span></span>
+          <span class="tl tg">  Snippet 'deploy' saved ✓</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:run deploy</span></span>
+          <span class="tl tw">  Running snippet 'deploy'...</span>
+          <span class="tl tg">  ✓ Containers updated</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">rm -rf /var/data</span></span>
+          <span class="tl ty tbold">  ⚠  Destructive command detected:</span>
+          <span class="tl tw">     rm -rf /var/data</span>
+          <span class="tl ty">  Type 'yes' to proceed: </span><span class="tw">no</span>
+          <span class="tl tdm">  Cancelled.</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-y">📖</div>
-      <div class="feat-title">Command Docs</div>
-      <div class="feat-desc">Built-in reference for 35+ commands: description, every flag explained, and a real-world example.</div>
-      <div class="feat-cmd">:help &lt;command&gt;</div>
+
+    <div class="reveal">
+      <div class="demo-header">
+        <div class="demo-lbl">DevTools: SSL + JWT</div>
+        <div class="demo-badge-new">NEW</div>
+      </div>
+      <div class="term-win">
+        <div class="term-bar"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div><span class="tb-title">:ssl · :jwt</span></div>
+        <div class="term-body" style="font-size:.7rem">
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ssl api.example.com</span></span>
+          <span class="tl ty tbold">  ▸ SSL/TLS  api.example.com:443</span>
+          <span class="tl tw">  TLS Version  TLSv1.3</span>
+          <span class="tl tw">  Subject CN   api.example.com</span>
+          <span class="tl tw">  Issuer       Let's Encrypt</span>
+          <span class="tl tg">  Expires      Mar 15 2026  (87d remaining)</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:jwt eyJhbGciOiJIUzI1NiJ9.eyJ...</span></span>
+          <span class="tl ty tbold">  ▸ JWT TOKEN</span>
+          <span class="tl tw">  HEADER</span>
+          <span class="tl tc">  alg          HS256</span>
+          <span class="tl tw">  PAYLOAD</span>
+          <span class="tl tc">  sub          user_123</span>
+          <span class="tl tc">  exp          2026-01-15  <span class="tg">(expires in 120d)</span></span>
+          <span class="tl tc">  role         admin</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-r">🔧</div>
-      <div class="feat-title">Instant Error Fixes</div>
-      <div class="feat-desc">Recognizes 15+ common error patterns and shows a fix immediately. Auto-triggered after any failed command.</div>
-      <div class="feat-cmd">:fix · :last</div>
+  </div>
+
+  <!-- Row 3: Docker + Network -->
+  <div class="demo-grid-2" style="margin-top:1.5rem">
+    <div class="reveal">
+      <div class="demo-header">
+        <div class="demo-lbl">Docker inspector</div>
+      </div>
+      <div class="term-win">
+        <div class="term-bar"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div><span class="tb-title">:docker · :docker stats</span></div>
+        <div class="term-body" style="font-size:.72rem">
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:docker stats</span></span>
+          <span class="tl ty tbold">  ▸ DOCKER STATS</span>
+          <span class="tl tdm">  NAME        CPU      MEMORY            NET I/O</span>
+          <span class="tl"><span class="tc">  api-prod</span>    <span class="tg">12.4%</span>    <span class="tw">512MB / 2GB</span>       <span class="tdm">44MB / 8MB</span></span>
+          <span class="tl"><span class="tc">  worker-1</span>    <span class="ty">68.2%</span>    <span class="tw">1.1GB / 2GB</span>       <span class="tdm">2MB / 1MB</span></span>
+          <span class="tl"><span class="tc">  db-main</span>     <span class="tg">4.1%</span>     <span class="tw">890MB / 4GB</span>       <span class="tdm">200MB / 180MB</span></span>
+          <span class="tl"><span class="tc">  redis</span>       <span class="tr">92.5%</span>    <span class="tr">3.8GB / 4GB</span>       <span class="tdm">400MB / 350MB</span></span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:ai why is redis at 92% CPU?</span></span>
+          <span class="tl tdm">  ◎ Groq [1 turn] ▸</span>
+          <span class="tl tw">  High CPU usually means a slow query or</span>
+          <span class="tl tw">  KEYS * scan. Run: <span class="tc">redis-cli monitor</span></span>
+          <span class="tl tw">  to see which commands are flooding it.</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-o">🔑</div>
-      <div class="feat-title">Key Validation</div>
-      <div class="feat-desc">Each provider has a known key prefix. JooCLI detects if you put a Groq key on Claude (or any mismatch) and warns you clearly.</div>
-      <div class="feat-cmd">:ai key &lt;provider&gt; &lt;key&gt;</div>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feat-icon fi-c">🛡</div>
-      <div class="feat-title">Cloudflare Fix</div>
-      <div class="feat-desc">Browser-like User-Agent header on all API calls prevents Cloudflare 403/1010 blocks common on WSL and VPS environments.</div>
-      <div class="feat-cmd">Automatic · no config needed</div>
+
+    <div class="reveal">
+      <div class="demo-header">
+        <div class="demo-lbl">Network diagnostics</div>
+      </div>
+      <div class="term-win">
+        <div class="term-bar"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div><span class="tb-title">:net · :ssl · :dns</span></div>
+        <div class="term-body" style="font-size:.72rem">
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:net check api.example.com:443</span></span>
+          <span class="tl ty tbold">  ▸ TCP CHECK  api.example.com</span>
+          <span class="tl tw">  DNS   api.example.com → <span class="tg">93.184.216.34</span></span>
+          <span class="tl tw">  TCP   api.example.com:<span class="ty">443</span>  <span class="tg">OPEN</span>  (12.3 ms)</span>
+          <span class="tl tw">  HTTP  https://api.example.com/  <span class="tg">200</span> OK</span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:dns example.com MX</span></span>
+          <span class="tl ty tbold">  ▸ DNS  example.com</span>
+          <span class="tl ty">  MX Records:</span>
+          <span class="tl">  <span class="tdm">·</span> <span class="tg">10 mail.example.com.</span></span>
+          <span class="tl"> </span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:b64 hello world</span></span>
+          <span class="tl tdm">  Encoded: </span><span class="tg">aGVsbG8gd29ybGQ=</span>
+          <span class="tl"><span class="prompt-joo">joo</span><span class="prompt-arr"> ❯ </span><span class="tw">:hash secret sha256</span></span>
+          <span class="tl tg">  2bb80d537b1da3e38bd30361aa...</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- COMMANDS REFERENCE -->
+<!-- ── COMMANDS ── -->
 <section class="section" id="commands">
   <div class="reveal">
-    <div class="sec-label">Reference</div>
+    <span class="sec-kicker">Reference</span>
     <h2 class="sec-title">All commands</h2>
-    <p class="sec-sub">Every JooCLI built-in at a glance.</p>
+    <p class="sec-sub">Every JooCLI built-in command. v5.0 adds Kubernetes, DevTools, and Workflow namespaces.</p>
   </div>
-
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden" class="reveal">
-    <table class="cmd-table">
-      <thead>
-        <tr><th>Command</th><th>Description</th><th>Tag</th></tr>
-      </thead>
+  <div class="cmd-wrap reveal">
+    <table class="cmd-tbl">
+      <thead><tr><th>Command</th><th>Description</th><th>Tag</th></tr></thead>
       <tbody>
-        <tr><td><span class="cmd-name">:ai &lt;question&gt;</span></td><td><span class="cmd-desc">Ask the active AI provider. Last captured error auto-included as context</span></td><td><span class="tag tag-ai">AI</span></td></tr>
-        <tr><td><span class="cmd-name">:ai status</span></td><td><span class="cmd-desc">Show all 4 providers, key validity, active provider, and expected key prefixes</span></td><td><span class="tag tag-ai">AI</span></td></tr>
-        <tr><td><span class="cmd-name">:ai set &lt;provider&gt;</span></td><td><span class="cmd-desc">Switch to claude / chatgpt / groq / gemini. Validates key on switch</span></td><td><span class="tag tag-ai">AI</span></td></tr>
-        <tr><td><span class="cmd-name">:ai key &lt;p&gt; &lt;key&gt;</span></td><td><span class="cmd-desc">Save an API key with prefix validation. Stored in ~/.joocli_config.json</span></td><td><span class="tag tag-ai">AI</span></td></tr>
-        <tr><td><span class="cmd-name">:help &lt;cmd&gt;</span></td><td><span class="cmd-desc">Show description, all flags, and example for any shell command</span></td><td><span class="tag tag-core">core</span></td></tr>
-        <tr><td><span class="cmd-name">:fix [err]</span></td><td><span class="cmd-desc">Match error text to known patterns and show fix. Uses last error if no arg given</span></td><td><span class="tag tag-core">core</span></td></tr>
-        <tr><td><span class="cmd-name">:docker</span></td><td><span class="cmd-desc">Full Docker report: containers (status + ports), images, networks, volumes</span></td><td><span class="tag tag-docker">docker</span></td></tr>
-        <tr><td><span class="cmd-name">:docker logs &lt;n&gt;</span></td><td><span class="cmd-desc">Tail container logs. Optionally pass number of lines (default 50)</span></td><td><span class="tag tag-docker">docker</span></td></tr>
-        <tr><td><span class="cmd-name">:docker inspect &lt;n&gt;</span></td><td><span class="cmd-desc">Show container IP, ports, env vars, mounts, restart policy</span></td><td><span class="tag tag-docker">docker</span></td></tr>
-        <tr><td><span class="cmd-name">:docker exec &lt;n&gt;</span></td><td><span class="cmd-desc">Open interactive shell (sh or bash) inside a running container</span></td><td><span class="tag tag-docker">docker</span></td></tr>
-        <tr><td><span class="cmd-name">:docker stop|start|rm</span></td><td><span class="cmd-desc">Manage container lifecycle directly from JooCLI</span></td><td><span class="tag tag-docker">docker</span></td></tr>
-        <tr><td><span class="cmd-name">:net</span></td><td><span class="cmd-desc">Show all network interfaces, IPv4/IPv6, MAC, routing table, DNS servers</span></td><td><span class="tag tag-net">network</span></td></tr>
-        <tr><td><span class="cmd-name">:ports</span></td><td><span class="cmd-desc">List all listening TCP/UDP ports with process names (uses ss or netstat)</span></td><td><span class="tag tag-net">network</span></td></tr>
-        <tr><td><span class="cmd-name">:history [N] [term]</span></td><td><span class="cmd-desc">Browse and search bash/zsh history. Fuzzy search supported</span></td><td><span class="tag tag-core">core</span></td></tr>
-        <tr><td><span class="cmd-name">:last</span></td><td><span class="cmd-desc">Show last captured error or full ~/.joocli_errors.log</span></td><td><span class="tag tag-core">core</span></td></tr>
-        <tr><td><span class="cmd-name">:clear</span></td><td><span class="cmd-desc">Clear the terminal screen</span></td><td><span class="tag tag-core">core</span></td></tr>
+        <tr><td colspan="3" style="background:var(--bg3);padding:.5rem 1.2rem;font-size:.6rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase">AI</td></tr>
+        <tr><td><span class="cmd-n">:ai &lt;question&gt;</span></td><td><span class="cmd-d">Ask AI. Context from previous turns auto-included. Last output auto-attached</span></td><td><span class="tag t-ai">AI</span></td></tr>
+        <tr><td><span class="cmd-n">:ai explain</span></td><td><span class="cmd-d">AI explains last command output automatically — no extra typing</span></td><td><span class="tag t-ai">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:ai clear</span></td><td><span class="cmd-d">Reset conversation history and start fresh context</span></td><td><span class="tag t-ai">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:ai status</span></td><td><span class="cmd-d">All 4 providers, key validity, active indicator, turn counter in session</span></td><td><span class="tag t-ai">AI</span></td></tr>
+        <tr><td><span class="cmd-n">:ai set &lt;p&gt;</span></td><td><span class="cmd-d">Switch to: claude / chatgpt / groq / gemini</span></td><td><span class="tag t-ai">AI</span></td></tr>
+        <tr><td><span class="cmd-n">:ai key &lt;p&gt; &lt;key&gt;</span></td><td><span class="cmd-d">Save encrypted API key to ~/.joocli/config.json (chmod 600)</span></td><td><span class="tag t-ai">AI</span></td></tr>
+        <tr><td colspan="3" style="background:var(--bg3);padding:.5rem 1.2rem;font-size:.6rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase">Kubernetes</td></tr>
+        <tr><td><span class="cmd-n">:k8s [pods]</span></td><td><span class="cmd-d">Cluster overview or colour-coded pod list (Running=green, Error=red, Pending=yellow)</span></td><td><span class="tag t-k8s">K8S</span></td></tr>
+        <tr><td><span class="cmd-n">:k8s logs &lt;pod&gt;</span></td><td><span class="cmd-d">Pod logs with fuzzy name matching — typos auto-corrected</span></td><td><span class="tag t-k8s">K8S</span></td></tr>
+        <tr><td><span class="cmd-n">:k8s exec &lt;pod&gt;</span></td><td><span class="cmd-d">Interactive shell inside a pod (sh or bash)</span></td><td><span class="tag t-k8s">K8S</span></td></tr>
+        <tr><td><span class="cmd-n">:k8s describe &lt;res&gt;</span></td><td><span class="cmd-d">kubectl describe with colour-coded events (Warning=red, Normal=green)</span></td><td><span class="tag t-k8s">K8S</span></td></tr>
+        <tr><td><span class="cmd-n">:k8s top [ns]</span></td><td><span class="cmd-d">kubectl top pods — resource usage per pod</span></td><td><span class="tag t-k8s">K8S</span></td></tr>
+        <tr><td><span class="cmd-n">:k8s ctx [name]</span></td><td><span class="cmd-d">List or switch kubectl contexts</span></td><td><span class="tag t-k8s">K8S</span></td></tr>
+        <tr><td><span class="cmd-n">:k8s ns &lt;namespace&gt;</span></td><td><span class="cmd-d">Set default namespace for all :k8s commands in this session</span></td><td><span class="tag t-k8s">K8S</span></td></tr>
+        <tr><td colspan="3" style="background:var(--bg3);padding:.5rem 1.2rem;font-size:.6rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase">Docker</td></tr>
+        <tr><td><span class="cmd-n">:docker</span></td><td><span class="cmd-d">Full report: containers, images, compose projects, networks, volumes</span></td><td><span class="tag t-doc">Docker</span></td></tr>
+        <tr><td><span class="cmd-n">:docker stats</span></td><td><span class="cmd-d">Live CPU / memory / network / disk I/O for all containers</span></td><td><span class="tag t-doc">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:docker logs &lt;n&gt;</span></td><td><span class="cmd-d">Container logs. Fuzzy name matching on typos</span></td><td><span class="tag t-doc">Docker</span></td></tr>
+        <tr><td><span class="cmd-n">:docker inspect &lt;n&gt;</span></td><td><span class="cmd-d">Container details: env vars, ports, mounts, restart policy</span></td><td><span class="tag t-doc">Docker</span></td></tr>
+        <tr><td><span class="cmd-n">:docker exec &lt;n&gt;</span></td><td><span class="cmd-d">Interactive shell inside a container</span></td><td><span class="tag t-doc">Docker</span></td></tr>
+        <tr><td><span class="cmd-n">:docker compose &lt;cmd&gt;</span></td><td><span class="cmd-d">Passthrough to docker compose (up/down/pull/logs/ps)</span></td><td><span class="tag t-doc">NEW</span></td></tr>
+        <tr><td colspan="3" style="background:var(--bg3);padding:.5rem 1.2rem;font-size:.6rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase">Network</td></tr>
+        <tr><td><span class="cmd-n">:net</span></td><td><span class="cmd-d">All interfaces, IPs, routing table, DNS servers, external IP</span></td><td><span class="tag t-net">Net</span></td></tr>
+        <tr><td><span class="cmd-n">:net check HOST:PORT</span></td><td><span class="cmd-d">DNS resolve + TCP connect + HTTP status check</span></td><td><span class="tag t-net">Net</span></td></tr>
+        <tr><td><span class="cmd-n">:net scan CIDR</span></td><td><span class="cmd-d">nmap subnet scan for live hosts and open ports</span></td><td><span class="tag t-net">Net</span></td></tr>
+        <tr><td><span class="cmd-n">:ping / :trace / :dns</span></td><td><span class="cmd-d">Ping, traceroute, DNS lookup with clean coloured output</span></td><td><span class="tag t-net">Net</span></td></tr>
+        <tr><td><span class="cmd-n">:ssl HOST</span></td><td><span class="cmd-d">TLS cert inspector: version, expiry countdown, SANs, issuer</span></td><td><span class="tag t-net">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:ports</span></td><td><span class="cmd-d">All listening ports with process names and known service labels</span></td><td><span class="tag t-net">Net</span></td></tr>
+        <tr><td colspan="3" style="background:var(--bg3);padding:.5rem 1.2rem;font-size:.6rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase">DevTools</td></tr>
+        <tr><td><span class="cmd-n">:jwt &lt;token&gt;</span></td><td><span class="cmd-d">Decode and inspect JWT: header, payload, expiry with countdown</span></td><td><span class="tag t-dev">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:b64 &lt;text&gt;</span></td><td><span class="cmd-d">Base64 encode. :b64 -d &lt;text&gt; to decode</span></td><td><span class="tag t-dev">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:hash &lt;text&gt; [algo]</span></td><td><span class="cmd-d">Hash text: sha256 (default), md5, sha1, sha512</span></td><td><span class="tag t-dev">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:url &lt;text&gt;</span></td><td><span class="cmd-d">URL encode. :url -d &lt;text&gt; to decode</span></td><td><span class="tag t-dev">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:bench</span></td><td><span class="cmd-d">Quick CPU (500k ops) + disk write (1MB) benchmark with colour thresholds</span></td><td><span class="tag t-dev">NEW</span></td></tr>
+        <tr><td colspan="3" style="background:var(--bg3);padding:.5rem 1.2rem;font-size:.6rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase">Workflow</td></tr>
+        <tr><td><span class="cmd-n">:snippet save N CMD</span></td><td><span class="cmd-d">Save a named command sequence. Tab-completion on snippet names</span></td><td><span class="tag t-cor">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:run &lt;snippet&gt;</span></td><td><span class="cmd-d">Execute a saved snippet by name. Fuzzy match on typos</span></td><td><span class="tag t-cor">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:watch CMD [N]</span></td><td><span class="cmd-d">Re-run command every N seconds. Changed lines highlighted green</span></td><td><span class="tag t-cor">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:plugins</span></td><td><span class="cmd-d">List all loaded plugins from ~/.joocli/plugins/</span></td><td><span class="tag t-cor">NEW</span></td></tr>
+        <tr><td><span class="cmd-n">:help &lt;cmd&gt;</span></td><td><span class="cmd-d">Built-in docs for 50+ commands: flags and real-world examples</span></td><td><span class="tag t-cor">Core</span></td></tr>
+        <tr><td><span class="cmd-n">:fix [err]</span></td><td><span class="cmd-d">Instant fix suggestions for 22 error patterns. Uses last error if no arg</span></td><td><span class="tag t-cor">Core</span></td></tr>
+        <tr><td><span class="cmd-n">:history [N] [term]</span></td><td><span class="cmd-d">Search bash/zsh/fish history with optional filter term</span></td><td><span class="tag t-cor">Core</span></td></tr>
       </tbody>
     </table>
   </div>
@@ -1041,111 +1380,52 @@ footer {
 
 <div class="divider"></div>
 
-<!-- DEMO -->
-<section class="section" id="demo">
+<!-- ── PLUGINS ── -->
+<section class="section" id="plugins">
   <div class="reveal">
-    <div class="sec-label">Demo</div>
-    <h2 class="sec-title">See it in action</h2>
-    <p class="sec-sub">Real terminal sessions showing JooCLI v3.0 workflows.</p>
+    <span class="sec-kicker">Extensibility</span>
+    <h2 class="sec-title">Build your own commands</h2>
+    <p class="sec-sub">The plugin API is intentionally minimal. A plugin is just a Python file with two things: a command list and a handler function.</p>
   </div>
-
-  <div class="demo-grid">
-    <!-- AI Provider Switching -->
-    <div class="reveal">
-      <div class="demo-label">AI provider switching</div>
-      <div class="term-window">
-        <div class="term-titlebar"><div class="td r"></div><div class="td y"></div><div class="td g"></div><span class="term-title">:ai set / :ai key</span></div>
-        <div class="term-body" style="font-size:0.72rem;min-height:300px">
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai set claude</span></span>
-          <span class="tl ty">  ⚠ Warning: key looks like a groq key</span>
-          <span class="tl tdm">     Use: :ai key claude sk-ant-YOUR_KEY</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai key claude sk-ant-api1234...</span></span>
-          <span class="tl tg">  Key for 'claude' saved ✓</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai set claude</span></span>
-          <span class="tl tg">  Switched to Claude (Anthropic) ✓</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai why is nginx giving 502?</span></span>
-          <span class="tl tc">  Asking Claude (Anthropic)...</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl tw">  502 Bad Gateway means nginx can't</span>
-          <span class="tl tw">  reach the upstream server. Check:</span>
-          <span class="tl tg">  systemctl status your-backend</span>
-          <span class="tl tw">  and verify the proxy_pass port.</span>
-        </div>
+  <div class="plugin-example reveal">
+    <div class="plugin-header">
+      <span class="plugin-filename">example_plugin_sysinfo.py</span>
+      <span class="plugin-path">→ drop in ~/.joocli/plugins/</span>
+    </div>
+    <div class="term-body" style="font-size:.76rem;line-height:1.8;padding:1.5rem">
+      <span class="tl tdm"># JooCLI Plugin — adds :sysinfo command</span>
+      <span class="tl"> </span>
+      <span class="tl"><span class="tc">COMMANDS</span>    = [<span class="ty">"sysinfo"</span>]              <span class="tdm"># commands this plugin registers</span></span>
+      <span class="tl"><span class="tc">DESCRIPTION</span> = <span class="ty">"Enhanced system reporter"</span>  <span class="tdm"># shown in :plugins list</span></span>
+      <span class="tl"> </span>
+      <span class="tl"><span class="tb">def</span> <span class="tg">handle</span>(args: str) -> str:</span>
+      <span class="tl">    <span class="tdm">"""Called when user types ':sysinfo [args]'"""</span></span>
+      <span class="tl">    <span class="tb">import</span> subprocess</span>
+      <span class="tl">    sub = args.strip().lower()</span>
+      <span class="tl">    <span class="tb">if</span> sub == <span class="ty">"cpu"</span>:</span>
+      <span class="tl">        <span class="tb">return</span> subprocess.getoutput(<span class="ty">"lscpu | grep 'Model name'"</span>)</span>
+      <span class="tl">    <span class="tb">elif</span> sub == <span class="ty">"mem"</span>:</span>
+      <span class="tl">        <span class="tb">return</span> subprocess.getoutput(<span class="ty">"free -h"</span>)</span>
+      <span class="tl">    <span class="tb">return</span> subprocess.getoutput(<span class="ty">"uname -a"</span>)</span>
+    </div>
+  </div>
+  <div class="security-grid reveal" style="margin-top:1.5rem">
+    <div class="sec-card sec-good">
+      <div class="sec-card-title"><span style="font-size:1rem">✓</span> Plugin conventions</div>
+      <div class="sec-card-desc">
+        • Define <code>COMMANDS = ["name"]</code> — list of commands your plugin registers<br>
+        • Define <code>handle(args: str) -> str</code> — receives everything after the command<br>
+        • Return a string to print, or <code>None</code> to handle printing yourself<br>
+        • Plugins get full Python stdlib access and can import anything installed
       </div>
     </div>
-
-    <!-- Docker Report -->
-    <div class="reveal">
-      <div class="demo-label">Docker inspector</div>
-      <div class="term-window">
-        <div class="term-titlebar"><div class="td r"></div><div class="td y"></div><div class="td g"></div><span class="term-title">:docker</span></div>
-        <div class="term-body" style="font-size:0.72rem;min-height:300px">
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:docker</span></span>
-          <span class="tl tc tbold">  Docker Engine  v26.1.3</span>
-          <span class="tl tdm">  ─────────────────────────────</span>
-          <span class="tl ty tbold">  CONTAINERS</span>
-          <span class="tl tdm">  NAME          STATUS         PORTS</span>
-          <span class="tl tg">  myapp         Up 2 hours     :8080->80</span>
-          <span class="tl tg">  postgres-db   Up 3 days      :5432->5432</span>
-          <span class="tl tr">  old-worker    Exited (1)     —</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl ty tbold">  IMAGES</span>
-          <span class="tl tc">  nginx:latest         45MB</span>
-          <span class="tl tc">  postgres:15          412MB</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl ty tbold">  NETWORKS</span>
-          <span class="tl tw">  bridge   driver=bridge  local</span>
-          <span class="tl tw">  app-net  driver=bridge  local</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Error Auto-Fix -->
-    <div class="reveal">
-      <div class="demo-label">Error auto-fix + AI</div>
-      <div class="term-window">
-        <div class="term-titlebar"><div class="td r"></div><div class="td y"></div><div class="td g"></div><span class="term-title">:fix · :ai</span></div>
-        <div class="term-body" style="font-size:0.72rem;min-height:300px">
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">docker start myapp</span></span>
-          <span class="tl tr">  [exit 1] address already in use</span>
-          <span class="tl ty tbold">  Quick fix:</span>
-          <span class="tl tw">  Port already taken.</span>
-          <span class="tl tw">  lsof -i :&lt;PORT&gt; to find PID</span>
-          <span class="tl tw">  kill -9 &lt;PID&gt; to free it</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ai explain this error</span></span>
-          <span class="tl tc">  Asking Groq / LLaMA...</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl tw">  Port 8080 is already bound by</span>
-          <span class="tl tw">  another process. Run lsof -i :8080</span>
-          <span class="tl tw">  to find the PID, then kill it.</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Net + Ports -->
-    <div class="reveal">
-      <div class="demo-label">Network inspector</div>
-      <div class="term-window">
-        <div class="term-titlebar"><div class="td r"></div><div class="td y"></div><div class="td g"></div><span class="term-title">:net · :ports</span></div>
-        <div class="term-body" style="font-size:0.72rem;min-height:300px">
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:net</span></span>
-          <span class="tl ty tbold">  NETWORK INTERFACES</span>
-          <span class="tl tc tbold">  eth0</span>
-          <span class="tl tw">    IPv4    192.168.1.42/24</span>
-          <span class="tl tdm">    MAC     00:1a:2b:3c:4d:5e</span>
-          <span class="tl tc tbold">  docker0</span>
-          <span class="tl tw">    IPv4    172.17.0.1/16</span>
-          <span class="tl">&nbsp;</span>
-          <span class="tl"><span class="tg tbold">joo</span><span class="tb"> ❯ </span><span class="tw">:ports</span></span>
-          <span class="tl ty tbold">  LISTENING PORTS</span>
-          <span class="tl tc">  tcp   0.0.0.0:8080   nginx</span>
-          <span class="tl tc">  tcp   0.0.0.0:5432   postgres</span>
-          <span class="tl tc">  tcp   0.0.0.0:22     sshd</span>
-        </div>
+    <div class="sec-card sec-warn">
+      <div class="sec-card-title"><span style="font-size:1rem">⚡</span> Auto-loaded on startup</div>
+      <div class="sec-card-desc">
+        • All <code>*.py</code> files in <code>~/.joocli/plugins/</code> load at launch<br>
+        • Load errors are shown as warnings — they don't crash the shell<br>
+        • Tab-completion works for plugin commands automatically<br>
+        • List all active plugins with <code>:plugins</code>
       </div>
     </div>
   </div>
@@ -1153,52 +1433,57 @@ footer {
 
 <div class="divider"></div>
 
-<!-- CTA -->
-<section class="section" style="text-align:center">
+<!-- ── CTA ── -->
+<section class="section" style="text-align:center;padding:5rem 3.5rem">
   <div class="reveal">
-    <div class="glow-line" style="margin:0 auto 1.75rem"></div>
-    <h2 class="sec-title" style="margin-bottom:0.75rem">Ready to try JooCLI?</h2>
-    <p class="sec-sub" style="margin:0 auto 2rem;text-align:center">One Python file. No bloat. Four AI providers. Your terminal, smarter.</p>
+    <div style="width:48px;height:3px;background:var(--cyan);border-radius:2px;margin:0 auto 2rem;box-shadow:0 0 16px var(--cyan)"></div>
+    <h2 class="sec-title" style="margin-bottom:.8rem">The terminal shell DevOps engineers actually want.</h2>
+    <p class="sec-sub" style="margin:0 auto 2.5rem;text-align:center">
+      One Python file. Multi-turn AI. Native Kubernetes. Plugin system. Network toolkit. Zero installs.
+    </p>
     <div style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap">
-      <a href="#install" class="btn btn-primary" style="font-size:0.9rem;padding:0.85rem 2.2rem">Install now — it's free</a>
-      <a href="#commands" class="btn btn-secondary" style="font-size:0.9rem;padding:0.85rem 1.8rem">Browse all commands →</a>
+      <a href="#install" class="btn btn-primary" style="font-size:.88rem;padding:.82rem 2.2rem">
+        python3 joo_cli_v5.py
+      </a>
+      <a href="#commands" class="btn btn-ghost" style="font-size:.88rem;padding:.82rem 1.9rem">Browse all commands →</a>
     </div>
-    <div style="margin-top:1.25rem;font-size:0.7rem;color:var(--text3)">
-      Python 3.8+ · Zero dependencies · Linux · macOS · WSL · 4 AI Providers
+    <div style="margin-top:1.5rem;font-size:.67rem;color:var(--text3)">
+      Python 3.8+ &nbsp;·&nbsp; Zero pip installs &nbsp;·&nbsp; Linux · macOS · WSL &nbsp;·&nbsp; 4 AI Providers &nbsp;·&nbsp; K8s Native
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ── FOOTER ── -->
 <footer>
   <div class="footer-logo">JooCLI</div>
   <ul class="footer-links">
-    <li><a href="#ai-providers">AI</a></li>
+    <li><a href="#ai">AI</a></li>
     <li><a href="#install">Install</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#commands">Commands</a></li>
     <li><a href="#demo">Demo</a></li>
+    <li><a href="#plugins">Plugins</a></li>
   </ul>
-  <div class="footer-note">Built with Python stdlib · No tracking · No ads · v3.0</div>
+  <div class="footer-copy">v5.0 · Python stdlib · Zero tracking · Zero ads</div>
 </footer>
 
 <script>
-// ── Tab switching ──────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
+// Tab switching
+document.querySelectorAll('.itab').forEach(btn => {
   btn.addEventListener('click', function() {
-    const wrap = this.closest('.install-wrap');
-    wrap.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    wrap.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    this.classList.add('active');
-    wrap.querySelector('#tab-' + this.dataset.tab).classList.add('active');
+    const wrap = this.closest('.install-box');
+    wrap.querySelectorAll('.itab').forEach(b => b.classList.remove('on'));
+    wrap.querySelectorAll('.ipanel').forEach(p => p.classList.remove('on'));
+    this.classList.add('on');
+    const panel = wrap.querySelector('#itab-' + this.dataset.tab);
+    if (panel) panel.classList.add('on');
   });
 });
 
-// ── Copy buttons ───────────────────────────────────────────────
-document.querySelectorAll('.copy-btn').forEach(btn => {
+// Copy buttons
+document.querySelectorAll('.cpybtn').forEach(btn => {
   btn.addEventListener('click', function() {
-    const text = this.dataset.copy;
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(this.dataset.copy).then(() => {
       this.textContent = 'copied!';
       this.classList.add('ok');
       setTimeout(() => { this.textContent = 'copy'; this.classList.remove('ok'); }, 2000);
@@ -1206,25 +1491,25 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
   });
 });
 
-// ── Scroll reveal ──────────────────────────────────────────────
-const observer = new IntersectionObserver((entries) => {
+// Scroll reveal with stagger
+const obs = new IntersectionObserver((entries) => {
   entries.forEach((e, i) => {
     if (e.isIntersecting) {
-      setTimeout(() => e.target.classList.add('visible'), i * 70);
-      observer.unobserve(e.target);
+      setTimeout(() => e.target.classList.add('visible'), i * 65);
+      obs.unobserve(e.target);
     }
   });
-}, { threshold: 0.08 });
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}, { threshold: 0.07 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-// ── Hero terminal typing ───────────────────────────────────────
-const heroLines = [
-  { sel: '#ht1', text: '  :ai set    → switch AI provider', cls: 'tl tp' },
-  { sel: '#ht2', text: '  :ai key    → save API key', cls: 'tl tp' },
-  { sel: '#ht3', text: '  :ai status → check all providers', cls: 'tl tp' },
-  { sel: '#ht4', text: '  :docker    → container report', cls: 'tl tc' },
-  { sel: '#ht5', text: '  :net       → network info', cls: 'tl tc' },
-];
+// Animated terminal typing in hero
+const heroTerm = document.querySelector('.hero-right .term-body');
+if (heroTerm) {
+  const cursor = heroTerm.querySelector('.cursor');
+  if (cursor) {
+    // Cursor is already blinking via CSS — nothing extra needed
+  }
+}
 </script>
 </body>
 </html>
